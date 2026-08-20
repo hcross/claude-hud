@@ -222,6 +222,7 @@ Simplified and Traditional Chinese HUD labels are available as explicit opt-ins.
 | `display.externalUsagePath` | string | `""` | Optional absolute path to a local usage snapshot file. Relative paths are ignored. When stdin `rate_limits` are present, `balance_label` is appended and `model_scoped` windows fill in when stdin lacks them; when stdin windows are missing, valid usage windows can be used as a fallback |
 | `display.externalUsageWritePath` | string | `""` | Optional absolute `.json` path in an existing directory. When stdin `rate_limits` exists, ClaudeHUD writes a private snapshot for other local tools. Relative paths, non-json files, and missing parent directories are ignored |
 | `display.externalUsageFreshnessMs` | number | `300000` | Maximum allowed age for the external usage snapshot before it is ignored |
+| `display.externalBalanceLabelMode` | `always` \| `ollama-cloud` | `always` | Controls when the external snapshot's `balance_label` is merged into the usage line. `always` (upstream default) treats the external feeder as authoritative for the current session. `ollama-cloud` merges only for Ollama cloud sessions (model display_name ending in `:cloud`), so a provider-specific balance written by an Ollama poller never leaks into a native Anthropic session |
 | `display.showTokenBreakdown` | boolean | true | Show token details at high context (85%+) |
 | `display.showTools` | boolean | false | Show tools activity line |
 | `display.showSkills` | boolean | false | Show active Skills detected from `Skill` tool invocations |
@@ -286,6 +287,8 @@ Usage display is **enabled by default** when Claude Code provides subscriber `ra
 Set `display.usageValue` to `remaining` to show quota left instead of quota used. Warning colors and 7-day threshold checks still use the underlying used percentage.
 
 ClaudeHUD prefers the official statusline stdin payload for rate-limit windows. If `display.externalUsagePath` points to a fresh local sidecar snapshot, ClaudeHUD can append its `balance_label` alongside stdin windows. If stdin `rate_limits` are missing, the same snapshot can provide fallback usage windows.
+
+When the snapshot's `balance_label` is provider-specific (e.g. a poller that only writes the balance for one backend), `display.externalBalanceLabelMode` controls whether it merges: `always` merges for every session, while `ollama-cloud` restricts the merge to Ollama cloud sessions (model display_name ending in `:cloud`) so the label never appears in a native Anthropic session.
 
 The fallback snapshot path must be absolute. The snapshot must be fresh enough (`display.externalUsageFreshnessMs`) and include valid `updated_at`, plus a `five_hour` window, `seven_day` window, `balance_label`, or `model_scoped` array. `balance_label` is optional text for prepaid provider balances; it is trimmed, length-limited, and sanitized before display. Relative paths, invalid JSON, stale files, or invalid timestamps are ignored quietly.
 
