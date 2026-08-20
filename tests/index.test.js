@@ -621,6 +621,55 @@ test("main fills missing seven-day usage from external snapshot", async () => {
   });
 });
 
+test("externalBalanceLabelMode ollama-cloud gates the merge to :cloud models", async () => {
+  const snapshot = () => ({
+    fiveHour: 99,
+    sevenDay: 85,
+    fiveHourResetAt: null,
+    sevenDayResetAt: null,
+    balanceLabel: "Extra: $3.83/4wk",
+  });
+
+  // Anthropic model (display_name without ":cloud") → balanceLabel NOT merged.
+  let rendered;
+  await main({
+    readStdin: async () => makeStdin({
+      model: { display_name: "Opus" },
+      rate_limits: { five_hour: { used_percentage: 22, resets_at: 1710000000 } },
+    }),
+    parseTranscript: async () => makeTranscript(),
+    countConfigs: async () => makeCounts(),
+    loadConfig: async () => makeConfig({
+      display: { externalUsagePath: "/tmp/usage.json", externalBalanceLabelMode: "ollama-cloud" },
+    }),
+    getGitStatus: async () => null,
+    getUsageFromExternalSnapshot: () => snapshot(),
+    render: (ctx) => {
+      rendered = ctx;
+    },
+  });
+  assert.equal(rendered?.usageData?.balanceLabel, undefined);
+
+  // Ollama cloud model → balanceLabel merged.
+  await main({
+    readStdin: async () => makeStdin({
+      model: { display_name: "deepseek-v4-flash:cloud" },
+      rate_limits: { five_hour: { used_percentage: 21.9, resets_at: 1710000000 } },
+    }),
+    parseTranscript: async () => makeTranscript(),
+    countConfigs: async () => makeCounts(),
+    loadConfig: async () => makeConfig({
+      display: { externalUsagePath: "/tmp/usage.json", externalBalanceLabelMode: "ollama-cloud" },
+    }),
+    getGitStatus: async () => null,
+    getUsageFromExternalSnapshot: () => snapshot(),
+    render: (ctx) => {
+      rendered = ctx;
+    },
+  });
+  assert.equal(rendered?.usageData?.balanceLabel, "Extra: $3.83/4wk");
+});
+
 test("main skips all usage loading when usage display is disabled", async () => {
   let renderedContext;
   let externalCalls = 0;

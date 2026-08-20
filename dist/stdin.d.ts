@@ -29,6 +29,15 @@ export declare function isVertexModelId(modelId?: string): boolean;
 export declare function isEnterpriseModelId(modelId?: string): boolean;
 export declare function getProviderLabel(stdin: StdinData): string | null;
 export declare function shouldHideUsage(stdin: StdinData): boolean;
+/**
+ * Detects an Ollama cloud model (e.g. "deepseek-v4-flash:cloud").
+ *
+ * Ollama cloud models carry a ":cloud" suffix; Anthropic models never do.
+ * Used to gate the external snapshot's `balance_label` (Ollama cost data
+ * written by the ollama-usage poller) so it never leaks into a native
+ * Anthropic session, where it would be misleading.
+ */
+export declare function isOllamaCloudModel(stdin: StdinData): boolean;
 export declare function getUsageFromStdin(stdin: StdinData): UsageData | null;
 /**
  * Parses `rate_limits.model_scoped` (model-scoped weekly windows, e.g. Fable).

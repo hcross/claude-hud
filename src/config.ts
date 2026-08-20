@@ -253,6 +253,16 @@ export interface HudConfig {
     externalUsagePath: string;
     externalUsageWritePath: string;
     externalUsageFreshnessMs: number;
+    // Controls when the external snapshot's balanceLabel is merged into the
+    // usage line:
+    //   "always"      — Merge whenever the external snapshot carries a
+    //                   balanceLabel (upstream behavior; the feeder is
+    //                   authoritative for the current session).
+    //   "ollama-cloud"— Merge only for Ollama cloud sessions (model
+    //                   display_name ending in ":cloud"). A provider-specific
+    //                   balance written by an Ollama poller then never leaks
+    //                   into a native Anthropic session.
+    externalBalanceLabelMode: 'always' | 'ollama-cloud';
     modelFormat: ModelFormatMode;
     modelOverride: string;
     // Controls which source the model name comes from:
@@ -362,6 +372,7 @@ export const DEFAULT_CONFIG: HudConfig = {
     externalUsagePath: '',
     externalUsageWritePath: '',
     externalUsageFreshnessMs: 300000,
+    externalBalanceLabelMode: 'always',
     modelFormat: 'full',
     modelOverride: '',
     modelSource: 'stdin',
@@ -932,6 +943,11 @@ export function mergeConfig(userConfig: Partial<HudConfig>): HudConfig {
     modelSource: ['auto', 'stdin', 'transcript'].includes(migrated.display?.modelSource as string)
       ? (migrated.display!.modelSource as 'auto' | 'stdin' | 'transcript')
       : DEFAULT_CONFIG.display.modelSource,
+    externalBalanceLabelMode: ['always', 'ollama-cloud'].includes(
+      migrated.display?.externalBalanceLabelMode as string,
+    )
+      ? (migrated.display!.externalBalanceLabelMode as 'always' | 'ollama-cloud')
+      : DEFAULT_CONFIG.display.externalBalanceLabelMode,
     showProvider: typeof migrated.display?.showProvider === 'boolean'
       ? migrated.display.showProvider
       : DEFAULT_CONFIG.display.showProvider,

@@ -291,6 +291,18 @@ export function getProviderLabel(stdin) {
 export function shouldHideUsage(stdin) {
     return getProviderLabel(stdin) === 'Bedrock' || isBedrockModelId(stdin.model?.id);
 }
+/**
+ * Detects an Ollama cloud model (e.g. "deepseek-v4-flash:cloud").
+ *
+ * Ollama cloud models carry a ":cloud" suffix; Anthropic models never do.
+ * Used to gate the external snapshot's `balance_label` (Ollama cost data
+ * written by the ollama-usage poller) so it never leaks into a native
+ * Anthropic session, where it would be misleading.
+ */
+export function isOllamaCloudModel(stdin) {
+    const displayName = stdin.model?.display_name?.trim().toLowerCase();
+    return displayName?.endsWith(':cloud') ?? false;
+}
 function parseRateLimitPercent(value) {
     if (typeof value !== 'number' || !Number.isFinite(value)) {
         return null;

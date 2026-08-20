@@ -1,4 +1,4 @@
-import { readStdin, getUsageFromStdin } from "./stdin.js";
+import { readStdin, getUsageFromStdin, isOllamaCloudModel } from "./stdin.js";
 import { parseTranscript } from "./transcript.js";
 import { render } from "./render/index.js";
 import { countConfigs } from "./config-reader.js";
@@ -156,9 +156,18 @@ export async function main(overrides: Partial<MainDeps> = {}): Promise<void> {
       } else if (config.display.externalUsagePath) {
         const ext = deps.getUsageFromExternalSnapshot(config, deps.now());
         if (ext != null) {
+          // When does the external snapshot's balance_label get merged?
+          //   "always"       — upstream behavior: the feeder is authoritative.
+          //   "ollama-cloud" — only for Ollama cloud sessions (display_name
+          //                    ending in ":cloud"), so a provider-specific
+          //                    balance written by an Ollama poller never leaks
+          //                    into a native Anthropic session.
+          const mergeExternalBalance =
+            config.display.externalBalanceLabelMode === "always" ||
+            isOllamaCloudModel(stdin);
           usageData = {
             ...usageData,
-            ...(ext.balanceLabel != null && { balanceLabel: ext.balanceLabel }),
+            ...(mergeExternalBalance && ext.balanceLabel != null && { balanceLabel: ext.balanceLabel }),
             // If stdin did not provide sevenDay (e.g. third-party clients like the
             // Claudian Obsidian plugin that only surface five_hour), fall back to the
             // external snapshot so the weekly limit still shows in the HUD.

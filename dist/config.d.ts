@@ -148,6 +148,7 @@ export interface HudConfig {
         externalUsagePath: string;
         externalUsageWritePath: string;
         externalUsageFreshnessMs: number;
+        externalBalanceLabelMode: 'always' | 'ollama-cloud';
         modelFormat: ModelFormatMode;
         modelOverride: string;
         modelSource: 'auto' | 'stdin' | 'transcript';

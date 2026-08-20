@@ -118,6 +118,7 @@ export const DEFAULT_CONFIG = {
         externalUsagePath: '',
         externalUsageWritePath: '',
         externalUsageFreshnessMs: 300000,
+        externalBalanceLabelMode: 'always',
         modelFormat: 'full',
         modelOverride: '',
         modelSource: 'stdin',
@@ -596,6 +597,9 @@ export function mergeConfig(userConfig) {
         modelSource: ['auto', 'stdin', 'transcript'].includes(migrated.display?.modelSource)
             ? migrated.display.modelSource
             : DEFAULT_CONFIG.display.modelSource,
+        externalBalanceLabelMode: ['always', 'ollama-cloud'].includes(migrated.display?.externalBalanceLabelMode)
+            ? migrated.display.externalBalanceLabelMode
+            : DEFAULT_CONFIG.display.externalBalanceLabelMode,
         showProvider: typeof migrated.display?.showProvider === 'boolean'
             ? migrated.display.showProvider
             : DEFAULT_CONFIG.display.showProvider,
