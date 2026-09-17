@@ -48,9 +48,11 @@ export function renderProjectLine(ctx: RenderContext): string | null {
   }
 
   // With `contextPosition: "projectLine"` the context bar is inlined here,
-  // between the model badge and the project segment, without its label.
+  // between the model badge and the project segment, without its label. It
+  // shares the `model` segment key (same semantics as the compact layout) so
+  // a custom `projectLineOrder` moves it together with the model badge.
   if (display?.contextPosition === 'projectLine') {
-    push(renderContextSegment(ctx));
+    push(renderContextSegment(ctx), 'model');
   }
 
   let projectPart: string | null = null;
