@@ -77,6 +77,7 @@ export const DEFAULT_CONFIG = {
         showConfigCounts: false,
         showCost: false,
         showRoutedCost: false,
+        showDailyCost: false,
         showDuration: false,
         showSpeed: false,
         showTokenBreakdown: true,
@@ -85,6 +86,11 @@ export const DEFAULT_CONFIG = {
         usageBarEnabled: true,
         showResetLabel: true,
         usageCompact: false,
+        showModelScopedUsage: true,
+        compactResetTime: false,
+        labelOverrides: {},
+        showBalanceLabel: true,
+        showContextTokens: false,
         showTools: false,
         showSkills: false,
         showMcp: false,
@@ -183,6 +189,24 @@ function validateContextValue(value) {
 }
 function validateUsageValue(value) {
     return value === 'percent' || value === 'remaining';
+}
+const PROGRESS_LABEL_KEYS = ['context', 'usage', 'weekly', 'approxRam'];
+/**
+ * Keep only known label keys carrying string values; silently drop anything
+ * else so a malformed config can't inject arbitrary label text.
+ */
+function parseLabelOverrides(value) {
+    if (typeof value !== 'object' || value === null) {
+        return {};
+    }
+    const overrides = {};
+    for (const key of PROGRESS_LABEL_KEYS) {
+        const text = value[key];
+        if (typeof text === 'string' && text.length > 0) {
+            overrides[key] = text;
+        }
+    }
+    return overrides;
 }
 function validateLanguage(value) {
     return value === 'en' || value === 'zh' || value === 'zh-Hans' || value === 'zh-Hant' || value === 'zh-TW';
@@ -495,6 +519,9 @@ export function mergeConfig(userConfig) {
         showRoutedCost: typeof migrated.display?.showRoutedCost === 'boolean'
             ? migrated.display.showRoutedCost
             : DEFAULT_CONFIG.display.showRoutedCost,
+        showDailyCost: typeof migrated.display?.showDailyCost === 'boolean'
+            ? migrated.display.showDailyCost
+            : DEFAULT_CONFIG.display.showDailyCost,
         showDuration: typeof migrated.display?.showDuration === 'boolean'
             ? migrated.display.showDuration
             : DEFAULT_CONFIG.display.showDuration,
@@ -519,6 +546,19 @@ export function mergeConfig(userConfig) {
         usageCompact: typeof migrated.display?.usageCompact === 'boolean'
             ? migrated.display.usageCompact
             : DEFAULT_CONFIG.display.usageCompact,
+        showModelScopedUsage: typeof migrated.display?.showModelScopedUsage === 'boolean'
+            ? migrated.display.showModelScopedUsage
+            : DEFAULT_CONFIG.display.showModelScopedUsage,
+        compactResetTime: typeof migrated.display?.compactResetTime === 'boolean'
+            ? migrated.display.compactResetTime
+            : DEFAULT_CONFIG.display.compactResetTime,
+        labelOverrides: parseLabelOverrides(migrated.display?.labelOverrides),
+        showBalanceLabel: typeof migrated.display?.showBalanceLabel === 'boolean'
+            ? migrated.display.showBalanceLabel
+            : DEFAULT_CONFIG.display.showBalanceLabel,
+        showContextTokens: typeof migrated.display?.showContextTokens === 'boolean'
+            ? migrated.display.showContextTokens
+            : DEFAULT_CONFIG.display.showContextTokens,
         showTools: typeof migrated.display?.showTools === 'boolean'
             ? migrated.display.showTools
             : DEFAULT_CONFIG.display.showTools,
@@ -698,22 +738,44 @@ function mergeOverrides(base, override) {
 }
 function readConfigFile(configPath) {
     try {
-        const stat = fs.lstatSync(configPath);
-        if (stat.isSymbolicLink() || !stat.isFile()) {
-            debug('Ignoring %s: expected a regular, non-symlink file', configPath);
-            return null;
+        // Validate and read through a single open file descriptor so a path swap
+        // (symlink or growth) between check and read can't bypass either guard.
+        // O_NOFOLLOW is the symlink defense on POSIX (open fails with ELOOP,
+        // caught below); it is undefined on Windows, so it's OR'd in only when
+        // present.
+        const flags = fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0);
+        const fd = fs.openSync(configPath, flags);
+        try {
+            const stat = fs.fstatSync(fd);
+            if (!stat.isFile()) {
+                debug('Ignoring %s: expected a regular, non-symlink file', configPath);
+                return null;
+            }
+            // Bound the read itself (not just the stat) so a file that grows after
+            // fstat can't slip an oversized payload past the cap; loop until done
+            // so a legal short read can't under-count an oversized file.
+            const buf = Buffer.alloc(MAX_CONFIG_FILE_BYTES + 1);
+            let off = 0;
+            let n = 0;
+            do {
+                n = fs.readSync(fd, buf, off, buf.length - off, off);
+                off += n;
+            } while (n > 0 && off < buf.length);
+            if (off > MAX_CONFIG_FILE_BYTES) {
+                debug('Ignoring %s: file exceeds %d bytes', configPath, MAX_CONFIG_FILE_BYTES);
+                return null;
+            }
+            const content = buf.subarray(0, off).toString('utf-8');
+            const parsed = JSON.parse(content);
+            if (!isPlainObject(parsed) || !hasSafeConfigShape(parsed)) {
+                debug('Ignoring %s: expected a bounded JSON object without unsafe keys', configPath);
+                return null;
+            }
+            return parsed;
         }
-        if (stat.size > MAX_CONFIG_FILE_BYTES) {
-            debug('Ignoring %s: file exceeds %d bytes', configPath, MAX_CONFIG_FILE_BYTES);
-            return null;
+        finally {
+            fs.closeSync(fd);
         }
-        const content = fs.readFileSync(configPath, 'utf-8');
-        const parsed = JSON.parse(content);
-        if (!isPlainObject(parsed) || !hasSafeConfigShape(parsed)) {
-            debug('Ignoring %s: expected a bounded JSON object without unsafe keys', configPath);
-            return null;
-        }
-        return parsed;
     }
     catch (err) {
         if (err.code === 'ENOENT') {

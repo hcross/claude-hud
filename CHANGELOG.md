@@ -4,6 +4,24 @@ All notable changes to Claude HUD will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- `display.showDailyCost` option to show today's cumulative spend across sessions (`Today $12.34`), accumulated from the native stdin `cost.total_cost_usd` into a per-day ledger that resets at local midnight (#695).
+- `display.compactResetTime` option to compact the reset-time suffix: `resets in 3h 32m` renders as `(⏰3h32)` (unit separators stripped, minutes unit dropped when hours are present), overriding `showResetLabel` (#1).
+- `display.labelOverrides` option to replace the progress-bar labels (`context`, `usage`, `weekly`, `approxRam`) with custom text such as `Ctx`/`Usg`/`Wkl`; overridden text also drives the label-column alignment width (#1).
+- `display.showBalanceLabel` option to hide the external usage snapshot's `balance_label` (e.g. `Ollama Pro`) (#1).
+- `display.showContextTokens` option to append the context token count after the percent value in human-readable form (`135 tk`, `3.4k tk`, `1.23m tk`) (#2).
+
+### Fixed
+- Refresh the prompt-cache clock when a request starts rather than when its response arrives, ignoring client-side slash command records, interrupt markers, and subagent requests (#719).
+- Treat Agent `tool_result` payloads with `isAsync` or `status: async_launched` as background so the agents line stays up until the task-notification (#734).
+- Pass `--no-optional-locks` on `git diff --numstat` so a timed-out statusline poll cannot leave `.git/index.lock` behind (#726).
+- Render the prompt-cache clock as `until <time>` so the value reads as expiry, not write time (#727).
+- Pin a pre-promo clock in the Claude 5 point-release pricing test, which time-bombed once the Sonnet 5 introductory pricing ended on 2026-09-01.
+
+### Docs
+- Add the ten missing config options and the absolute-path caveat for `display.externalUsagePath` to `README.zh.md` (#730).
+- Document `display.externalBalanceLabelMode` in `README.zh.md` (missed when the option landed).
+
 ## [0.8.0] - 2026-08-18
 
 ### Added

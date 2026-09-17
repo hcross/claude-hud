@@ -164,12 +164,16 @@ test('estimateSessionCost prices Claude 5 ids carrying a context-window suffix',
 
 test('estimateSessionCost prices Claude 5 point releases like their base model', () => {
   const tokens = { inputTokens: 1000000, outputTokens: 0, cacheCreationTokens: 0, cacheReadTokens: 0 };
+  // Sonnet 5 pricing is date-dependent (intro pricing ends 2026-09-01 UTC):
+  // pin a pre-promo clock so the base-vs-point-release parity assertion is
+  // deterministic. Without it this test started failing on 2026-09-01.
+  const beforePromo = { now: new Date('2026-08-01T00:00:00.000Z') };
 
-  const opus51 = estimateSessionCost({ model: { display_name: 'Opus 5.1' } }, tokens);
+  const opus51 = estimateSessionCost({ model: { display_name: 'Opus 5.1' } }, tokens, beforePromo);
   assert.ok(opus51);
   assert.equal(opus51.inputUsd, 5);
 
-  const sonnet51 = estimateSessionCost({ model: { display_name: 'Sonnet 5.1' } }, tokens);
+  const sonnet51 = estimateSessionCost({ model: { display_name: 'Sonnet 5.1' } }, tokens, beforePromo);
   assert.ok(sonnet51);
   assert.equal(sonnet51.inputUsd, 2);
 });

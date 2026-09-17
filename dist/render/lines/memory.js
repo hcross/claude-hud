@@ -14,7 +14,7 @@ export function renderMemoryLine(ctx, labelOptions = {}) {
     if (!ctx.memoryUsage) {
         return null;
     }
-    const memoryLabel = progressLabel("label.approxRam", colors, { ...labelOptions, includeMemoryInWidth: true });
+    const memoryLabel = progressLabel("label.approxRam", colors, { ...labelOptions, includeMemoryInWidth: true }, ctx.config?.display);
     const percentColor = getQuotaColor(ctx.memoryUsage.usedPercent, colors);
     const percent = `${percentColor}${ctx.memoryUsage.usedPercent}%${RESET}`;
     const bar = quotaBar(ctx.memoryUsage.usedPercent, getAdaptiveBarWidth(), colors);
