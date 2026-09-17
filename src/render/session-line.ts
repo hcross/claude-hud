@@ -11,7 +11,8 @@ import { renderAdvisorLine } from './lines/advisor.js';
 import { t } from '../i18n/index.js';
 import type { TimeFormatMode, UsageValueMode } from '../config.js';
 import { formatResetTime, type WallClockOptions } from './format-reset-time.js';
-import { formatTokens, formatContextValue } from '../utils/format.js';
+import { resolveLabelText } from './lines/label-align.js';
+import { formatTokens, formatContextValue, formatTokensCompact } from '../utils/format.js';
 import { formatAuthSegment } from '../auth.js';
 import { createDebug } from '../debug.js';
 import { formatModelDisplay } from './model-display.js';
@@ -57,11 +58,24 @@ export function renderSessionLine(ctx: RenderContext): string {
   const wallClockOpts: WallClockOptions = {
     hourCycle: display?.hourCycle ?? 'auto',
     showSeconds: display?.showClockSeconds ?? false,
+    compact: display?.compactResetTime ?? false,
   };
   const resetsKey = timeFormat === 'absolute' ? 'format.resets' : 'format.resetsIn';
   const contextValueMode = display?.contextValue ?? 'percent';
   const contextValue = formatContextValue(ctx, percent, contextValueMode);
-  const contextValueDisplay = `${getContextColor(percent, colors, contextThresholds)}${contextValue}${RESET}`;
+  let contextValueDisplay = `${getContextColor(percent, colors, contextThresholds)}${contextValue}${RESET}`;
+
+  if (display?.showContextTokens) {
+    const usage = ctx.stdin.context_window?.current_usage;
+    if (usage) {
+      const totalTokens =
+        (usage.input_tokens ?? 0)
+        + (usage.cache_creation_input_tokens ?? 0)
+        + (usage.cache_read_input_tokens ?? 0)
+        + (usage.output_tokens ?? 0);
+      contextValueDisplay += label(` (${formatTokensCompact(totalTokens)} tk)`, colors);
+    }
+  }
 
   const customLine = display?.customLine;
   const customLinePosition = display?.customLinePosition ?? 'last';
@@ -223,9 +237,11 @@ export function renderSessionLine(ctx: RenderContext): string {
         push(critical(`⚠ Limit${resetTime ? ` (${resetTime})` : ''}`, colors));
       } else {
         const resetSuffix = resetTime
-          ? showResetLabel
-            ? ` (${t(resetsKey)} ${resetTime})`
-            : ` (${resetTime})`
+          ? wallClockOpts.compact
+            ? `(⏰${resetTime})`
+            : showResetLabel
+              ? ` (${t(resetsKey)} ${resetTime})`
+              : ` (${resetTime})`
           : '';
         push(critical(`⚠ ${t('status.limitReached')}${resetSuffix}`, colors));
       }
@@ -262,7 +278,7 @@ export function renderSessionLine(ctx: RenderContext): string {
           scopedParts.forEach((part) => push(part));
         } else if (fiveHour === null && sevenDay !== null) {
           const weeklyOnlyPart = formatUsageWindowPart({
-            label: t('label.weekly'),
+            label: resolveLabelText('label.weekly', display),
             percent: sevenDay,
             resetAt: ctx.usageData.sevenDayResetAt,
             colors,
@@ -293,7 +309,7 @@ export function renderSessionLine(ctx: RenderContext): string {
           const sevenDayThreshold = display?.sevenDayThreshold ?? 80;
           if (sevenDay !== null && sevenDay >= sevenDayThreshold) {
             const sevenDayPart = formatUsageWindowPart({
-              label: t('label.weekly'),
+              label: resolveLabelText('label.weekly', display),
               percent: sevenDay,
               resetAt: ctx.usageData.sevenDayResetAt,
               colors,
@@ -305,15 +321,15 @@ export function renderSessionLine(ctx: RenderContext): string {
               usageValueMode,
               wallClockOpts,
             });
-            push(`${label(t('label.usage'), colors)} ${fiveHourPart}`);
+            push(`${label(resolveLabelText('label.usage', display), colors)} ${fiveHourPart}`);
             push(sevenDayPart);
           } else {
-            push(`${label(t('label.usage'), colors)} ${fiveHourPart}`);
+            push(`${label(resolveLabelText('label.usage', display), colors)} ${fiveHourPart}`);
           }
           scopedParts.forEach((part) => push(part));
         } else if (scopedParts.length > 0) {
           const [firstScopedPart, ...remainingScopedParts] = scopedParts;
-          push(`${label(t('label.usage'), colors)} ${firstScopedPart}`);
+          push(`${label(resolveLabelText('label.usage', display), colors)} ${firstScopedPart}`);
           remainingScopedParts.forEach((part) => push(part));
         }
       }
@@ -321,7 +337,7 @@ export function renderSessionLine(ctx: RenderContext): string {
 
     if (ctx.usageData.balanceLabel) {
       if (!hasWindowData) {
-        push(`${label(t('label.usage'), colors)} ${ctx.usageData.balanceLabel}`);
+        push(`${label(resolveLabelText('label.usage', display), colors)} ${ctx.usageData.balanceLabel}`);
       } else {
         push(ctx.usageData.balanceLabel);
       }
@@ -421,7 +437,9 @@ function formatCompactWindowPart(
   const reset = formatResetTime(resetAt, timeFormat, wallClockOpts);
   const styledLabel = label(`${windowLabel}:`, colors);
   return reset
-    ? `${styledLabel} ${usageDisplay} ${label(`(${reset})`, colors)}`
+    ? wallClockOpts?.compact
+      ? `${styledLabel} ${usageDisplay} ${label(`(⏰${reset})`, colors)}`
+      : `${styledLabel} ${usageDisplay} ${label(`(${reset})`, colors)}`
     : `${styledLabel} ${usageDisplay}`;
 }
 
@@ -474,8 +492,11 @@ function formatUsageWindowPart({
   if (usageBarEnabled) {
     // Relative mode keeps the upstream "(duration / windowLabel)" pattern (e.g. "2h 30m / 5h").
     // Absolute/both modes use the preposition form instead — "(at 14:30 / 5h)" is incoherent.
+    // Compact reset times drop the window suffix too — "(⏰3h7)" is unambiguous by itself.
     const barReset = timeFormat === 'relative'
-      ? (reset ? `${reset} / ${windowDurationLabel ?? windowLabel}` : null)
+      ? (reset
+          ? (wallClockOpts?.compact ? `⏰${reset}` : `${reset} / ${windowDurationLabel ?? windowLabel}`)
+          : null)
       : (reset ? (showResetLabel ? `${t(resetsKey)} ${reset}` : reset) : null);
     const body = barReset
       ? `${quotaBar(percent ?? 0, barWidth, colors)} ${usageDisplay} (${barReset})`
@@ -484,9 +505,11 @@ function formatUsageWindowPart({
   }
 
   const resetSuffix = reset
-    ? showResetLabel
-      ? `(${t(resetsKey)} ${reset})`
-      : `(${reset})`
+    ? wallClockOpts?.compact
+      ? `(⏰${reset})`
+      : showResetLabel
+        ? `(${t(resetsKey)} ${reset})`
+        : `(${reset})`
     : '';
 
   return resetSuffix
