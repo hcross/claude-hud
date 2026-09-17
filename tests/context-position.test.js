@@ -150,3 +150,34 @@ test('projectLine: model badge suppressed still hoists the bar', () => {
   assert.match(line, /█░* 5%/);
   assert.match(line, /my-project/);
 });
+
+// ---------------------------------------------------------------------------
+// projectLine + custom projectLineOrder — the bar travels with `model` (#7)
+// ---------------------------------------------------------------------------
+
+test('projectLine: empty projectLineOrder keeps the bar between badge and project', () => {
+  const ctx = baseContext();
+  ctx.config.display.contextPosition = 'projectLine';
+  ctx.config.projectLineOrder = [];
+  const line = stripAnsi(renderProjectLine(ctx) ?? '');
+
+  const modelIdx = line.indexOf('[Opus]');
+  const barIdx = line.indexOf('█');
+  const projectIdx = line.indexOf('my-project');
+  assert.ok(modelIdx >= 0 && modelIdx < barIdx && barIdx < projectIdx,
+    'default (empty) order must keep the documented badge → bar → project order');
+});
+
+test('projectLine: ["project","model"] moves the bar with the model badge', () => {
+  const ctx = baseContext();
+  ctx.config.display.contextPosition = 'projectLine';
+  ctx.config.projectLineOrder = ['project', 'model'];
+  const line = stripAnsi(renderProjectLine(ctx) ?? '');
+
+  const projectIdx = line.indexOf('my-project');
+  const modelIdx = line.indexOf('[Opus]');
+  const barIdx = line.indexOf('█');
+  assert.ok(projectIdx >= 0 && projectIdx < modelIdx, 'the project segment must lead');
+  assert.ok(modelIdx >= 0 && modelIdx < barIdx, 'the bar must travel with the model segment');
+  assert.ok(!line.includes('Context'), 'the context label must stay suppressed');
+});

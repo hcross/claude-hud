@@ -167,7 +167,7 @@ Claude Code → stdin JSON → claude-hud → stdout → 在终端中显示
 | `maxWidth` | number \| `null` | `null` | 可选的回退宽度，仅在终端宽度检测完全失败时使用 |
 | `forceMaxWidth` | boolean | false | 当设置了 `maxWidth` 时始终使用它，即使终端宽度检测返回更小的值 |
 | `elementOrder` | string[] | `["project","context","usage","promptCache","memory","environment","tools","agents","todos","sessionTime"]` | 展开模式下元素的顺序。省略的条目在展开模式下隐藏。现有配置会保留其显式顺序直到更新 |
-| `projectLineOrder` | string[] | `[]` | 可选的首行片段前置顺序，适用于两种布局。可见性仍由 `display.show*` 控制；省略的片段保持渲染器原有顺序。例如 `["project","model"]` 会将项目和 Git 放到模型徽标之前 |
+| `projectLineOrder` | string[] | `[]` | 可选的首行片段前置顺序，适用于两种布局。可见性仍由 `display.show*` 控制；省略的片段保持渲染器原有顺序。`model` 覆盖提供方 + 模型 + 推理强度（紧凑布局中，以及展开布局中 `display.contextPosition` 为 `"projectLine"` 时还包括上下文进度条）；`project` 将路径 + 额外目录 + Git 作为一个片段。例如 `["project","model"]` 会将项目和 Git 放到模型徽标之前 |
 | `display.mergeGroups` | string[][] | `[["context","usage"]]` | 展开模式下相邻时应共享一行的元素分组。设为 `[]` 可禁用合并行 |
 | `display.rightAlign` | string[] | `[]` | 以合并行中第一个列出的元素作为右对齐后缀的起点，保持 `elementOrder` 并用空格填充间隔。锚点必须位于实际合并渲染的 `display.mergeGroups` 分组中。终端宽度未知、锚点位于首位或空间不足时回退到普通的 ` │ ` 连接。示例：分组为 `["project","context","usage"]` 时设为 `["context"]`，项目/git 保持在左侧，context 与 usage 靠右对齐。 |
 | `gitStatus.enabled` | boolean | true | 在 HUD 中显示 git 分支 |
@@ -188,7 +188,7 @@ Claude Code → stdin JSON → claude-hud → stdout → 在终端中显示
 | `display.addedDirsLayout` | `inline` \| `line` | `inline` | `inline` 将目录放在项目名称旁边，每个目录带 `+name` 前缀；`line` 在单独的 `Added dirs: name1, name2` 行渲染（无 `+` 前缀，逗号分隔） |
 | `display.showContextBar` | boolean | true | 显示可视化上下文进度条 `████░░░░░░` |
 | `display.contextValue` | `percent` \| `tokens` \| `remaining` \| `both` | `percent` | 上下文显示格式（`45%`、`45k/200k`、剩余 `55%` 或 `45% (45k/200k)`） |
-| `display.contextPosition` | `ownLine` \| `projectLine` | `ownLine` | 展开布局：`projectLine` 将上下文进度条内联到项目行，介于模型徽标与项目段之间（不带标签）；独立上下文行随之消失，上下文/用量合并行回退为仅用量 |
+| `display.contextPosition` | `ownLine` \| `projectLine` | `ownLine` | 展开布局：`projectLine` 将上下文进度条内联到项目行，介于模型徽标与项目段之间（不带标签）；独立上下文行随之消失，上下文/用量合并行回退为仅用量。内联的进度条与 `model` 片段共用同一键，自定义 `projectLineOrder` 会将其与模型徽标一起移动（与紧凑布局语义一致） |
 | `display.autoCompactWindow` | number \| `null` | `null` | 设为正数（如 `200000`）时，按此自动压缩窗口而不是完整模型上下文窗口计算上下文百分比，以匹配 `/context`。留空或 `null` 保持默认全窗口行为 |
 | `display.showConfigCounts` | boolean | false | 显示 CLAUDE.md、rules、MCPs、hooks 数量 |
 | `display.showCost` | boolean | false | 使用 Claude Code 原生提供的 `cost.total_cost_usd` 显示会话费用（可用时），并附带本地估算回退方案 |
