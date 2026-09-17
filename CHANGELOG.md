@@ -10,6 +10,7 @@ All notable changes to Claude HUD will be documented in this file.
 - `display.labelOverrides` option to replace the progress-bar labels (`context`, `usage`, `weekly`, `approxRam`) with custom text such as `Ctx`/`Usg`/`Wkl`; overridden text also drives the label-column alignment width (#1).
 - `display.showBalanceLabel` option to hide the external usage snapshot's `balance_label` (e.g. `Ollama Pro`) (#1).
 - `display.showContextTokens` option to append the context token count after the percent value in human-readable form (`135 tk`, `3.4k tk`, `1.23m tk`) (#2).
+- `display.contextPosition` option to render the context bar inline on the project line (`projectLine`), between the model badge and the project segment without its label; the standalone context line disappears and the merged context/usage line falls back to usage only (#5).
 
 ### Fixed
 - Refresh the prompt-cache clock when a request starts rather than when its response arrives, ignoring client-side slash command records, interrupt markers, and subagent requests (#719).

@@ -74,6 +74,7 @@ export const DEFAULT_CONFIG = {
         addedDirsLayout: 'inline',
         showContextBar: true,
         contextValue: 'percent',
+        contextPosition: 'ownLine',
         showConfigCounts: false,
         showCost: false,
         showRoutedCost: false,
@@ -186,6 +187,9 @@ function validateGitBranchOverflow(value) {
 }
 function validateContextValue(value) {
     return value === 'percent' || value === 'tokens' || value === 'remaining' || value === 'both';
+}
+function validateContextPosition(value) {
+    return value === 'ownLine' || value === 'projectLine';
 }
 function validateUsageValue(value) {
     return value === 'percent' || value === 'remaining';
@@ -510,6 +514,9 @@ export function mergeConfig(userConfig) {
         contextValue: validateContextValue(migrated.display?.contextValue)
             ? migrated.display.contextValue
             : DEFAULT_CONFIG.display.contextValue,
+        contextPosition: validateContextPosition(migrated.display?.contextPosition)
+            ? migrated.display.contextPosition
+            : DEFAULT_CONFIG.display.contextPosition,
         showConfigCounts: typeof migrated.display?.showConfigCounts === 'boolean'
             ? migrated.display.showConfigCounts
             : DEFAULT_CONFIG.display.showConfigCounts,

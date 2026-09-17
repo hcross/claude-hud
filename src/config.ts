@@ -16,6 +16,7 @@ export type LineLayoutType = 'compact' | 'expanded';
 
 export type AutocompactBufferMode = 'enabled' | 'disabled';
 export type ContextValueMode = 'percent' | 'tokens' | 'remaining' | 'both';
+export type ContextPositionMode = 'ownLine' | 'projectLine';
 export type UsageValueMode = 'percent' | 'remaining';
 export type GitBranchOverflowMode = 'truncate' | 'wrap';
 
@@ -195,6 +196,7 @@ export interface HudConfig {
     addedDirsLayout: AddedDirsLayout;
     showContextBar: boolean;
     contextValue: ContextValueMode;
+    contextPosition: ContextPositionMode;
     showConfigCounts: boolean;
     showCost: boolean;
     // Also show cost for routed providers (Bedrock/Vertex) that `showCost`
@@ -349,6 +351,7 @@ export const DEFAULT_CONFIG: HudConfig = {
     addedDirsLayout: 'inline',
     showContextBar: true,
     contextValue: 'percent',
+    contextPosition: 'ownLine',
     showConfigCounts: false,
     showCost: false,
     showRoutedCost: false,
@@ -468,6 +471,10 @@ function validateGitBranchOverflow(value: unknown): value is GitBranchOverflowMo
 
 function validateContextValue(value: unknown): value is ContextValueMode {
   return value === 'percent' || value === 'tokens' || value === 'remaining' || value === 'both';
+}
+
+function validateContextPosition(value: unknown): value is ContextPositionMode {
+  return value === 'ownLine' || value === 'projectLine';
 }
 
 function validateUsageValue(value: unknown): value is UsageValueMode {
@@ -851,6 +858,9 @@ export function mergeConfig(userConfig: Partial<HudConfig>): HudConfig {
     contextValue: validateContextValue(migrated.display?.contextValue)
       ? migrated.display.contextValue
       : DEFAULT_CONFIG.display.contextValue,
+    contextPosition: validateContextPosition(migrated.display?.contextPosition)
+      ? migrated.display.contextPosition
+      : DEFAULT_CONFIG.display.contextPosition,
     showConfigCounts: typeof migrated.display?.showConfigCounts === 'boolean'
       ? migrated.display.showConfigCounts
       : DEFAULT_CONFIG.display.showConfigCounts,
