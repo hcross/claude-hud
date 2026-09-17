@@ -296,6 +296,8 @@ Set `display.usageValue` to `remaining` to show quota left instead of quota used
 
 ClaudeHUD prefers the official statusline stdin payload for rate-limit windows. If `display.externalUsagePath` points to a fresh local sidecar snapshot, ClaudeHUD can append its `balance_label` alongside stdin windows. If stdin `rate_limits` are missing, the same snapshot can provide fallback usage windows.
 
+An example sidecar producer is [`hcross/ollama-usage`](https://github.com/hcross/ollama-usage): a small poller that fetches the Ollama cloud usage API every 120 seconds (systemd user timer on Linux, launchd LaunchAgent on macOS) and writes a snapshot matching this contract, so the HUD shows 5h/weekly quota bars and the extra-usage balance (`Xtr: $0.00/4wk`) when Claude Code runs against Ollama.
+
 When the snapshot's `balance_label` is provider-specific (e.g. a poller that only writes the balance for one backend), `display.externalBalanceLabelMode` controls whether it merges: `always` merges for every session, while `ollama-cloud` restricts the merge to Ollama cloud sessions (model display_name ending in `:cloud`) so the label never appears in a native Anthropic session.
 
 The fallback snapshot path must be absolute. The snapshot must be fresh enough (`display.externalUsageFreshnessMs`) and include valid `updated_at`, plus a `five_hour` window, `seven_day` window, `balance_label`, or `model_scoped` array. `balance_label` is optional text for prepaid provider balances; it is trimmed, length-limited, and sanitized before display. Relative paths, invalid JSON, stale files, or invalid timestamps are ignored quietly.
