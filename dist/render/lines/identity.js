@@ -6,7 +6,11 @@ import { progressLabel, } from "./label-align.js";
 import { formatTokens, formatContextValue, formatTokensCompact } from "../../utils/format.js";
 import { createDebug } from "../../debug.js";
 const debug = createDebug("context");
-export function renderIdentityLine(ctx, labelOptions = {}) {
+/** Context segment without its label: bar + value, optional token-count
+ * suffix and the critical-threshold token breakdown. Shared by the identity
+ * line and, when `display.contextPosition` is `projectLine`, inlined on the
+ * project line. */
+export function renderContextSegment(ctx) {
     const autoCompactWindow = ctx.config?.display?.autoCompactWindow ?? null;
     const rawPercent = getContextPercent(ctx.stdin, autoCompactWindow);
     const bufferedPercent = getBufferedPercent(ctx.stdin, autoCompactWindow);
@@ -24,9 +28,9 @@ export function renderIdentityLine(ctx, labelOptions = {}) {
     const contextValueMode = display?.contextValue ?? "percent";
     const contextValue = formatContextValue(ctx, percent, contextValueMode);
     const contextValueDisplay = `${getContextColor(percent, colors, contextThresholds)}${contextValue}${RESET}`;
-    let line = display?.showContextBar !== false
-        ? `${progressLabel("label.context", colors, labelOptions, display)} ${coloredBar(percent, getAdaptiveBarWidth(), colors, contextThresholds)} ${contextValueDisplay}`
-        : `${progressLabel("label.context", colors, labelOptions, display)} ${contextValueDisplay}`;
+    let segment = display?.showContextBar !== false
+        ? `${coloredBar(percent, getAdaptiveBarWidth(), colors, contextThresholds)} ${contextValueDisplay}`
+        : contextValueDisplay;
     if (display?.showContextTokens) {
         const usage = ctx.stdin.context_window?.current_usage;
         if (usage) {
@@ -34,7 +38,7 @@ export function renderIdentityLine(ctx, labelOptions = {}) {
                 + (usage.cache_creation_input_tokens ?? 0)
                 + (usage.cache_read_input_tokens ?? 0)
                 + (usage.output_tokens ?? 0);
-            line += label(` (${formatTokensCompact(totalTokens)} tk)`, colors);
+            segment += label(` (${formatTokensCompact(totalTokens)} tk)`, colors);
         }
     }
     if (display?.showTokenBreakdown !== false && percent >= (display?.contextCriticalThreshold ?? 85)) {
@@ -43,9 +47,19 @@ export function renderIdentityLine(ctx, labelOptions = {}) {
             const input = formatTokens(usage.input_tokens ?? 0);
             const cache = formatTokens((usage.cache_creation_input_tokens ?? 0) +
                 (usage.cache_read_input_tokens ?? 0));
-            line += label(` (${t("format.in")}: ${input}, ${t("format.cache")}: ${cache})`, colors);
+            segment += label(` (${t("format.in")}: ${input}, ${t("format.cache")}: ${cache})`, colors);
         }
     }
-    return line;
+    return segment;
+}
+export function renderIdentityLine(ctx, labelOptions = {}) {
+    const display = ctx.config?.display;
+    // With `contextPosition: "projectLine"` the bar is inlined on the project
+    // line (label suppressed), so there is no standalone context line.
+    if (display?.contextPosition === "projectLine") {
+        return null;
+    }
+    const colors = ctx.config?.colors;
+    return `${progressLabel("label.context", colors, labelOptions, display)} ${renderContextSegment(ctx)}`;
 }
 //# sourceMappingURL=identity.js.map

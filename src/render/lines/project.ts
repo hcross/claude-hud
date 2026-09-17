@@ -12,6 +12,7 @@ import { hyperlink, getFileHref, safeHyperlink } from '../../utils/hyperlinks.js
 import { formatModelDisplay } from '../model-display.js';
 import { formatAuthSegment } from '../../auth.js';
 import { formatProjectPath } from '../project-path.js';
+import { renderContextSegment } from './identity.js';
 import { DEFAULT_CONFIG, DEFAULT_PROJECT_LINE_ORDER } from '../../config.js';
 import type { FirstLineSegment } from '../../config.js';
 import { orderFirstLineParts } from '../first-line-order.js';
@@ -44,6 +45,12 @@ export function renderProjectLine(ctx: RenderContext): string | null {
     const model = formatModelName(resolveModelName(ctx.stdin, ctx.transcript, ctx.config?.display?.modelSource), ctx.config?.display?.modelFormat, ctx.config?.display?.modelOverride);
     const modelDisplay = formatModelDisplay(model, ctx);
     push(modelColor(`[${modelDisplay}]`, colors), 'model');
+  }
+
+  // With `contextPosition: "projectLine"` the context bar is inlined here,
+  // between the model badge and the project segment, without its label.
+  if (display?.contextPosition === 'projectLine') {
+    push(renderContextSegment(ctx));
   }
 
   let projectPart: string | null = null;

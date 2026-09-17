@@ -2,6 +2,7 @@ import type { Language } from './i18n/types.js';
 export type LineLayoutType = 'compact' | 'expanded';
 export type AutocompactBufferMode = 'enabled' | 'disabled';
 export type ContextValueMode = 'percent' | 'tokens' | 'remaining' | 'both';
+export type ContextPositionMode = 'ownLine' | 'projectLine';
 export type UsageValueMode = 'percent' | 'remaining';
 export type GitBranchOverflowMode = 'truncate' | 'wrap';
 /**
@@ -104,6 +105,7 @@ export interface HudConfig {
         addedDirsLayout: AddedDirsLayout;
         showContextBar: boolean;
         contextValue: ContextValueMode;
+        contextPosition: ContextPositionMode;
         showConfigCounts: boolean;
         showCost: boolean;
         showRoutedCost: boolean;
