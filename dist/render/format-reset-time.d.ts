@@ -4,6 +4,8 @@ import type { MessageKey } from '../i18n/types.js';
 export interface WallClockOptions {
     hourCycle: HourCycleMode;
     showSeconds: boolean;
+    /** Compact durations: "3h 32m" → "3h32", "3d 14h" → "3d14h" ("45m" stays). */
+    compact?: boolean;
 }
 /**
  * Formats a usage-window reset timestamp for display in the HUD.

@@ -1,8 +1,22 @@
-import type { HudColorOverrides } from "../../config.js";
+import type { HudColorOverrides, ProgressLabelKey } from "../../config.js";
 import type { MessageKey } from "../../i18n/types.js";
 import { label } from "../colors.js";
 import { t } from "../../i18n/index.js";
 import { codePointCellWidth, isCjkAmbiguousWide } from "../width.js";
+
+/** Display fragment of the config carrying `labelOverrides`. */
+export type LabelOverrideSource = {
+  labelOverrides?: Partial<Record<ProgressLabelKey, string>>;
+} | undefined;
+
+/**
+ * Resolve the text for a progress-bar label: a `display.labelOverrides`
+ * entry wins over the locale label.
+ */
+export function resolveLabelText(key: MessageKey, display?: LabelOverrideSource): string {
+  const overrideKey = key.replace(/^label\./, "") as ProgressLabelKey;
+  return display?.labelOverrides?.[overrideKey] ?? t(key);
+}
 
 /** Label keys that should be aligned when rendered on separate lines. */
 const PROGRESS_LABEL_KEYS: MessageKey[] = [
@@ -39,13 +53,13 @@ function plainTextWidth(str: string): number {
 }
 
 /** Compute the max visual width across the progress-bar labels in view. */
-function maxLabelWidth(includeMemory = false): number {
+function maxLabelWidth(includeMemory = false, display?: LabelOverrideSource): number {
   let max = 0;
   for (const key of PROGRESS_LABEL_KEYS) {
     if (key === "label.approxRam" && !includeMemory) {
       continue;
     }
-    const w = plainTextWidth(t(key));
+    const w = plainTextWidth(resolveLabelText(key, display));
     if (w > max) max = w;
   }
   return max;
@@ -60,9 +74,10 @@ export function paddedLabel(
   key: MessageKey,
   colors?: Partial<HudColorOverrides>,
   options: Pick<ProgressLabelOptions, "includeMemoryInWidth"> = {},
+  display?: LabelOverrideSource,
 ): string {
-  const text = t(key);
-  const pad = maxLabelWidth(options.includeMemoryInWidth) - plainTextWidth(text);
+  const text = resolveLabelText(key, display);
+  const pad = maxLabelWidth(options.includeMemoryInWidth, display) - plainTextWidth(text);
   const padded = pad > 0 ? text + " ".repeat(pad) : text;
   return label(padded, colors);
 }
@@ -71,11 +86,12 @@ export function progressLabel(
   key: MessageKey,
   colors?: Partial<HudColorOverrides>,
   options: ProgressLabelInput = {},
+  display?: LabelOverrideSource,
 ): string {
   const normalized = typeof options === "boolean" ? { align: options } : options;
   return normalized.align
-    ? paddedLabel(key, colors, normalized)
-    : label(t(key), colors);
+    ? paddedLabel(key, colors, normalized, display)
+    : label(resolveLabelText(key, display), colors);
 }
 
 // Exported for testing only.

@@ -14,4 +14,12 @@ export declare function formatTokens(n: number): string;
  *   both      → "45% (45k/200k)"
  */
 export declare function formatContextValue(ctx: RenderContext, percent: number, mode: 'percent' | 'tokens' | 'remaining' | 'both'): string;
+/**
+ * Format a token count in a finer human-readable form (with decimals kept):
+ *   >= 1M  → "1.23m"   (two decimals, trailing zeros trimmed)
+ *   >= 1k  → "3.4k"    (one decimal, trailing zeros trimmed)
+ *   < 1k   → "135"
+ * Callers append the unit (e.g. " tk").
+ */
+export declare function formatTokensCompact(n: number): string;
 //# sourceMappingURL=format.d.ts.map

@@ -56,3 +56,24 @@ export function formatContextValue(
 
   return `${percent}%`;
 }
+
+/**
+ * Format a token count in a finer human-readable form (with decimals kept):
+ *   >= 1M  → "1.23m"   (two decimals, trailing zeros trimmed)
+ *   >= 1k  → "3.4k"    (one decimal, trailing zeros trimmed)
+ *   < 1k   → "135"
+ * Callers append the unit (e.g. " tk").
+ */
+export function formatTokensCompact(n: number): string {
+  if (n >= 1000000) {
+    return `${trimTrailingZeros((n / 1000000).toFixed(2))}m`;
+  }
+  if (n >= 1000) {
+    return `${trimTrailingZeros((n / 1000).toFixed(1))}k`;
+  }
+  return `${n}`;
+}
+
+function trimTrailingZeros(s: string): string {
+  return s.replace(/\.?0+$/, "");
+}

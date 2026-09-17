@@ -201,6 +201,10 @@ Claude Code → stdin JSON → claude-hud → stdout → 在终端中显示
 | `display.usageBarEnabled` | boolean | true | 将使用率显示为可视化进度条而非文本 |
 | `display.usageCompact` | boolean | false | 以较短的文本形式显示使用率，如 `5h: 25% (1h 30m)`；优先于 `display.usageBarEnabled` |
 | `display.showResetLabel` | boolean | true | 在使用率倒计时前显示 `resets in` 前缀 |
+| `display.compactResetTime` | boolean | false | 压缩重置时间后缀：`resets in 3h 32m` 变为 `⏰3h32`（去掉单位间分隔符，含小时时省略分钟单位：`45m` 保持不变，`3d 14h` 变为 `3d14h`）。用时钟符号替代 `resets in` 字样，优先于 `display.showResetLabel` |
+| `display.labelOverrides` | object | `{}` | 用自定义文本覆盖进度条标签，按 `context` / `usage` / `weekly` / `approxRam` 指定（例如 `{ "context": "Ctx", "usage": "Usg", "weekly": "Wkl" }`）。覆盖文本同时驱动标签列对齐宽度 |
+| `display.showBalanceLabel` | boolean | true | 在使用率行末尾显示外部用量快照的 `balance_label`（例如 `Ollama Pro`）。设为 `false` 则永不附加 |
+| `display.showContextTokens` | boolean | false | 在上下文百分比后附加人类可读的 Token 数（`135 tk`、`3.4k tk`、`1.23m tk`） |
 | `display.showModelScopedUsage` | boolean | true | 显示按模型每周窗口（`model_scoped`，例如 Fable），无论其来自 stdin 还是外部用量快照。设为 `false` 后，使用率行的渲染效果等同于负载中本就没有这些窗口 |
 | `display.timeFormat` | `relative` \| `absolute` \| `both` \| `elapsed` \| `elapsedAndAbsolute` | `relative` | 控制使用率窗口时间的显示方式：仅倒计时（`resets in 2h 30m`）、墙钟重置时间（`resets at 14:30`）、两者同时显示、窗口已过百分比（`53% elapsed`），或已过百分比加墙钟重置时间 |
 | `display.hourCycle` | `auto` \| `h11` \| `h12` \| `h23` \| `h24` | `auto` | 墙钟重置时间（`absolute`/`both`/`elapsedAndAbsolute` 模式）的时制。`auto` 跟随系统区域设置；`h23` 强制使用 24 小时制（`14:30`），不受区域设置影响 |
@@ -209,6 +213,7 @@ Claude Code → stdin JSON → claude-hud → stdout → 在终端中显示
 | `display.externalUsagePath` | string | `""` | 可选的本地使用率快照文件**绝对路径**。相对路径会被忽略。stdin `rate_limits` 存在时会附加 `balance_label`，并在 stdin 缺少 `model_scoped` 窗口时用快照补齐；stdin 窗口缺失时可整体作为回退 |
 | `display.externalUsageWritePath` | string | `""` | 可选的绝对 `.json` 路径，父目录必须已存在。当 stdin `rate_limits` 存在时，ClaudeHUD 会写入私有权限快照供其他本地工具读取。相对路径、非 json 文件和缺失父目录会被忽略 |
 | `display.externalUsageFreshnessMs` | number | `300000` | 外部使用率快照允许的最长存活时间，超时后会被忽略 |
+| `display.externalBalanceLabelMode` | `always` \| `ollama-cloud` | `always` | 控制外部快照的 `balance_label` 何时合并进使用率行。`always`（上游默认值）视外部数据源对当前会话具有权威性；`ollama-cloud` 仅对 Ollama 云端会话（模型 display_name 以 `:cloud` 结尾）合并，避免某个 Ollama 轮询器写入的特定供应商余额泄漏到原生 Anthropic 会话中 |
 | `display.showTokenBreakdown` | boolean | true | 在高上下文时（85%+）显示 Token 详情 |
 | `display.showTools` | boolean | false | 显示工具活动行 |
 | `display.showSkills` | boolean | false | 显示从 `Skill` 工具调用检测到的活动 Skills |

@@ -214,6 +214,21 @@ export interface HudConfig {
     // Show the per-model weekly windows (`rate_limits.model_scoped`, e.g. Fable)
     // next to the 5h/7d windows. Set to false to keep only 5h/7d. Default on.
     showModelScopedUsage: boolean;
+    // Compact the reset-time suffix: strip unit separators and drop the
+    // minutes unit when hours are present ("3h 32m" → "3h32"), and replace
+    // the "resets in" wording with a clock glyph: "(⏰3h32)". Default off.
+    compactResetTime: boolean;
+    // Override the progress-bar labels ("context", "usage", "weekly",
+    // "approxRam") with custom text, e.g. short forms like "Ctx"/"Usg"/"Wkl".
+    // Overridden text also drives the label-column alignment width. Keys not
+    // listed fall back to the locale label. Default empty.
+    labelOverrides: Partial<Record<ProgressLabelKey, string>>;
+    // Show the external snapshot's balance_label (e.g. "Ollama Pro") at the
+    // end of the usage line. false = never append it. Default true.
+    showBalanceLabel: boolean;
+    // Append the context token count after the percent value in
+    // human-readable form ("3.4k tk"). Default off.
+    showContextTokens: boolean;
     showTools: boolean;
     showSkills: boolean;
     showMcp: boolean;
@@ -347,6 +362,10 @@ export const DEFAULT_CONFIG: HudConfig = {
     showResetLabel: true,
     usageCompact: false,
     showModelScopedUsage: true,
+    compactResetTime: false,
+    labelOverrides: {},
+    showBalanceLabel: true,
+    showContextTokens: false,
     showTools: false,
     showSkills: false,
     showMcp: false,
@@ -453,6 +472,29 @@ function validateContextValue(value: unknown): value is ContextValueMode {
 
 function validateUsageValue(value: unknown): value is UsageValueMode {
   return value === 'percent' || value === 'remaining';
+}
+
+/** Progress-bar label keys that `display.labelOverrides` can replace. */
+export type ProgressLabelKey = 'context' | 'usage' | 'weekly' | 'approxRam';
+
+const PROGRESS_LABEL_KEYS: readonly ProgressLabelKey[] = ['context', 'usage', 'weekly', 'approxRam'];
+
+/**
+ * Keep only known label keys carrying string values; silently drop anything
+ * else so a malformed config can't inject arbitrary label text.
+ */
+function parseLabelOverrides(value: unknown): Partial<Record<ProgressLabelKey, string>> {
+  if (typeof value !== 'object' || value === null) {
+    return {};
+  }
+  const overrides: Partial<Record<ProgressLabelKey, string>> = {};
+  for (const key of PROGRESS_LABEL_KEYS) {
+    const text = (value as Record<string, unknown>)[key];
+    if (typeof text === 'string' && text.length > 0) {
+      overrides[key] = text;
+    }
+  }
+  return overrides;
 }
 
 function validateLanguage(value: unknown): value is Language {
@@ -848,6 +890,16 @@ export function mergeConfig(userConfig: Partial<HudConfig>): HudConfig {
     showModelScopedUsage: typeof migrated.display?.showModelScopedUsage === 'boolean'
       ? migrated.display.showModelScopedUsage
       : DEFAULT_CONFIG.display.showModelScopedUsage,
+    compactResetTime: typeof migrated.display?.compactResetTime === 'boolean'
+      ? migrated.display.compactResetTime
+      : DEFAULT_CONFIG.display.compactResetTime,
+    labelOverrides: parseLabelOverrides(migrated.display?.labelOverrides),
+    showBalanceLabel: typeof migrated.display?.showBalanceLabel === 'boolean'
+      ? migrated.display.showBalanceLabel
+      : DEFAULT_CONFIG.display.showBalanceLabel,
+    showContextTokens: typeof migrated.display?.showContextTokens === 'boolean'
+      ? migrated.display.showContextTokens
+      : DEFAULT_CONFIG.display.showContextTokens,
     showTools: typeof migrated.display?.showTools === 'boolean'
       ? migrated.display.showTools
       : DEFAULT_CONFIG.display.showTools,

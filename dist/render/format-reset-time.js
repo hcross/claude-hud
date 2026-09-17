@@ -20,7 +20,7 @@ export function formatResetTime(resetAt, mode = 'relative', opts = DEFAULT_WALL_
     if (diffMs <= 0)
         return '';
     if (mode === 'relative') {
-        return formatRelative(diffMs);
+        return formatRelative(diffMs, opts.compact ?? false);
     }
     const absolute = formatAbsoluteTime(resetAt, now, opts);
     if (mode === 'absolute') {
@@ -28,9 +28,9 @@ export function formatResetTime(resetAt, mode = 'relative', opts = DEFAULT_WALL_
     }
     // 'both' — comma separator avoids nested parentheses when the caller
     // wraps the result in its own (...) parenthetical
-    return `${formatRelative(diffMs)}, ${absolute}`;
+    return `${formatRelative(diffMs, opts.compact ?? false)}, ${absolute}`;
 }
-function formatRelative(diffMs) {
+function formatRelative(diffMs, compact = false) {
     const diffMins = Math.ceil(diffMs / 60000);
     if (diffMins < 60) {
         return `${diffMins}m`;
@@ -40,9 +40,15 @@ function formatRelative(diffMs) {
     if (hours >= 24) {
         const days = Math.floor(hours / 24);
         const remHours = hours % 24;
-        return remHours > 0 ? `${days}d ${remHours}h` : `${days}d`;
+        if (remHours === 0) {
+            return `${days}d`;
+        }
+        return compact ? `${days}d${remHours}h` : `${days}d ${remHours}h`;
     }
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    if (mins === 0) {
+        return `${hours}h`;
+    }
+    return compact ? `${hours}h${mins}` : `${hours}h ${mins}m`;
 }
 /**
  * Renders a timestamp as wall-clock time, e.g. `at 14:30`, adding a date

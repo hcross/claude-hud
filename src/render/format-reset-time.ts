@@ -6,6 +6,8 @@ import { interpolate, t } from '../i18n/index.js';
 export interface WallClockOptions {
   hourCycle: HourCycleMode;
   showSeconds: boolean;
+  /** Compact durations: "3h 32m" → "3h32", "3d 14h" → "3d14h" ("45m" stays). */
+  compact?: boolean;
 }
 
 const DEFAULT_WALL_CLOCK_OPTIONS: WallClockOptions = { hourCycle: 'auto', showSeconds: false };
@@ -34,7 +36,7 @@ export function formatResetTime(
   if (diffMs <= 0) return '';
 
   if (mode === 'relative') {
-    return formatRelative(diffMs);
+    return formatRelative(diffMs, opts.compact ?? false);
   }
 
   const absolute = formatAbsoluteTime(resetAt, now, opts);
@@ -45,10 +47,10 @@ export function formatResetTime(
 
   // 'both' — comma separator avoids nested parentheses when the caller
   // wraps the result in its own (...) parenthetical
-  return `${formatRelative(diffMs)}, ${absolute}`;
+  return `${formatRelative(diffMs, opts.compact ?? false)}, ${absolute}`;
 }
 
-function formatRelative(diffMs: number): string {
+function formatRelative(diffMs: number, compact = false): string {
   const diffMins = Math.ceil(diffMs / 60000);
 
   if (diffMins < 60) {
@@ -61,10 +63,16 @@ function formatRelative(diffMs: number): string {
   if (hours >= 24) {
     const days = Math.floor(hours / 24);
     const remHours = hours % 24;
-    return remHours > 0 ? `${days}d ${remHours}h` : `${days}d`;
+    if (remHours === 0) {
+      return `${days}d`;
+    }
+    return compact ? `${days}d${remHours}h` : `${days}d ${remHours}h`;
   }
 
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  if (mins === 0) {
+    return `${hours}h`;
+  }
+  return compact ? `${hours}h${mins}` : `${hours}h ${mins}m`;
 }
 
 /**

@@ -1,6 +1,14 @@
 import { label } from "../colors.js";
 import { t } from "../../i18n/index.js";
 import { codePointCellWidth, isCjkAmbiguousWide } from "../width.js";
+/**
+ * Resolve the text for a progress-bar label: a `display.labelOverrides`
+ * entry wins over the locale label.
+ */
+export function resolveLabelText(key, display) {
+    const overrideKey = key.replace(/^label\./, "");
+    return display?.labelOverrides?.[overrideKey] ?? t(key);
+}
 /** Label keys that should be aligned when rendered on separate lines. */
 const PROGRESS_LABEL_KEYS = [
     "label.context",
@@ -28,13 +36,13 @@ function plainTextWidth(str) {
     return width;
 }
 /** Compute the max visual width across the progress-bar labels in view. */
-function maxLabelWidth(includeMemory = false) {
+function maxLabelWidth(includeMemory = false, display) {
     let max = 0;
     for (const key of PROGRESS_LABEL_KEYS) {
         if (key === "label.approxRam" && !includeMemory) {
             continue;
         }
-        const w = plainTextWidth(t(key));
+        const w = plainTextWidth(resolveLabelText(key, display));
         if (w > max)
             max = w;
     }
@@ -45,17 +53,17 @@ function maxLabelWidth(includeMemory = false) {
  * progress-bar label in the current locale, then wrapped with the `label()`
  * ANSI helper.
  */
-export function paddedLabel(key, colors, options = {}) {
-    const text = t(key);
-    const pad = maxLabelWidth(options.includeMemoryInWidth) - plainTextWidth(text);
+export function paddedLabel(key, colors, options = {}, display) {
+    const text = resolveLabelText(key, display);
+    const pad = maxLabelWidth(options.includeMemoryInWidth, display) - plainTextWidth(text);
     const padded = pad > 0 ? text + " ".repeat(pad) : text;
     return label(padded, colors);
 }
-export function progressLabel(key, colors, options = {}) {
+export function progressLabel(key, colors, options = {}, display) {
     const normalized = typeof options === "boolean" ? { align: options } : options;
     return normalized.align
-        ? paddedLabel(key, colors, normalized)
-        : label(t(key), colors);
+        ? paddedLabel(key, colors, normalized, display)
+        : label(resolveLabelText(key, display), colors);
 }
 // Exported for testing only.
 export { plainTextWidth as _plainTextWidth, maxLabelWidth as _maxLabelWidth };

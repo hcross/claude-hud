@@ -117,6 +117,10 @@ export interface HudConfig {
         showResetLabel: boolean;
         usageCompact: boolean;
         showModelScopedUsage: boolean;
+        compactResetTime: boolean;
+        labelOverrides: Partial<Record<ProgressLabelKey, string>>;
+        showBalanceLabel: boolean;
+        showContextTokens: boolean;
         showTools: boolean;
         showSkills: boolean;
         showMcp: boolean;
@@ -179,6 +183,8 @@ export declare function getConfigPath(): string;
  * can override any part of the shared config.
  */
 export declare function getConfigOverridePath(): string;
+/** Progress-bar label keys that `display.labelOverrides` can replace. */
+export type ProgressLabelKey = 'context' | 'usage' | 'weekly' | 'approxRam';
 export declare function mergeConfig(userConfig: Partial<HudConfig>): HudConfig;
 export declare function loadConfig(): Promise<HudConfig>;
 //# sourceMappingURL=config.d.ts.map

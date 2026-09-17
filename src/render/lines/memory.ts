@@ -30,6 +30,7 @@ export function renderMemoryLine(
     "label.approxRam",
     colors,
     { ...labelOptions, includeMemoryInWidth: true },
+    ctx.config?.display,
   );
   const percentColor = getQuotaColor(ctx.memoryUsage.usedPercent, colors);
   const percent = `${percentColor}${ctx.memoryUsage.usedPercent}%${RESET}`;

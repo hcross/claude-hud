@@ -87,6 +87,10 @@ export const DEFAULT_CONFIG = {
         showResetLabel: true,
         usageCompact: false,
         showModelScopedUsage: true,
+        compactResetTime: false,
+        labelOverrides: {},
+        showBalanceLabel: true,
+        showContextTokens: false,
         showTools: false,
         showSkills: false,
         showMcp: false,
@@ -185,6 +189,24 @@ function validateContextValue(value) {
 }
 function validateUsageValue(value) {
     return value === 'percent' || value === 'remaining';
+}
+const PROGRESS_LABEL_KEYS = ['context', 'usage', 'weekly', 'approxRam'];
+/**
+ * Keep only known label keys carrying string values; silently drop anything
+ * else so a malformed config can't inject arbitrary label text.
+ */
+function parseLabelOverrides(value) {
+    if (typeof value !== 'object' || value === null) {
+        return {};
+    }
+    const overrides = {};
+    for (const key of PROGRESS_LABEL_KEYS) {
+        const text = value[key];
+        if (typeof text === 'string' && text.length > 0) {
+            overrides[key] = text;
+        }
+    }
+    return overrides;
 }
 function validateLanguage(value) {
     return value === 'en' || value === 'zh' || value === 'zh-Hans' || value === 'zh-Hant' || value === 'zh-TW';
@@ -527,6 +549,16 @@ export function mergeConfig(userConfig) {
         showModelScopedUsage: typeof migrated.display?.showModelScopedUsage === 'boolean'
             ? migrated.display.showModelScopedUsage
             : DEFAULT_CONFIG.display.showModelScopedUsage,
+        compactResetTime: typeof migrated.display?.compactResetTime === 'boolean'
+            ? migrated.display.compactResetTime
+            : DEFAULT_CONFIG.display.compactResetTime,
+        labelOverrides: parseLabelOverrides(migrated.display?.labelOverrides),
+        showBalanceLabel: typeof migrated.display?.showBalanceLabel === 'boolean'
+            ? migrated.display.showBalanceLabel
+            : DEFAULT_CONFIG.display.showBalanceLabel,
+        showContextTokens: typeof migrated.display?.showContextTokens === 'boolean'
+            ? migrated.display.showContextTokens
+            : DEFAULT_CONFIG.display.showContextTokens,
         showTools: typeof migrated.display?.showTools === 'boolean'
             ? migrated.display.showTools
             : DEFAULT_CONFIG.display.showTools,
