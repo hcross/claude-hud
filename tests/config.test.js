@@ -94,6 +94,7 @@ test('enum options accept only their listed values', () => {
     'gitStatus.branchOverflow': ['truncate', 'wrap'],
     'display.addedDirsLayout': ['inline', 'line'],
     'display.contextValue': ['percent', 'tokens', 'remaining', 'both'],
+    'display.contextPosition': ['ownLine', 'projectLine'],
     'display.usageValue': ['percent', 'remaining'],
     'display.effortFormat': ['full', 'symbol', 'text'],
     'display.modelFormat': ['full', 'compact', 'short'],

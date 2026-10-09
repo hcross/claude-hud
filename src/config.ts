@@ -16,6 +16,8 @@ const LANGUAGES = ['en', 'zh', 'zh-Hans', 'zh-Hant', 'zh-TW'] as const satisfies
 const LINE_LAYOUTS = ['compact', 'expanded'] as const;
 const PATH_LEVELS = [1, 2, 3, 'full'] as const;
 const CONTEXT_VALUE_MODES = ['percent', 'tokens', 'remaining', 'both'] as const;
+// ownLine: the Context row; projectLine: the bar rides inline on the first line.
+const CONTEXT_POSITIONS = ['ownLine', 'projectLine'] as const;
 const USAGE_VALUE_MODES = ['percent', 'remaining'] as const;
 const GIT_BRANCH_OVERFLOW_MODES = ['truncate', 'wrap'] as const;
 // full: display name as-is; compact: drop the context-window suffix; short: also drop "Claude ".
@@ -62,6 +64,7 @@ const FIRST_LINE_SEGMENTS = [
 export type LineLayoutType = typeof LINE_LAYOUTS[number];
 export type PathLevels = typeof PATH_LEVELS[number];
 export type ContextValueMode = typeof CONTEXT_VALUE_MODES[number];
+export type ContextPosition = typeof CONTEXT_POSITIONS[number];
 export type UsageValueMode = typeof USAGE_VALUE_MODES[number];
 export type GitBranchOverflowMode = typeof GIT_BRANCH_OVERFLOW_MODES[number];
 export type ModelFormatMode = typeof MODEL_FORMATS[number];
@@ -133,6 +136,7 @@ export interface HudConfig {
     addedDirsLayout: AddedDirsLayout;
     showContextBar: boolean;
     contextValue: ContextValueMode;
+    contextPosition: ContextPosition;
     showConfigCounts: boolean;
     showCost: boolean;
     // Also show cost for routed providers (Bedrock/Vertex), which showCost hides.
@@ -240,6 +244,7 @@ export const DEFAULT_CONFIG: HudConfig = {
     addedDirsLayout: 'inline',
     showContextBar: true,
     contextValue: 'percent',
+    contextPosition: 'ownLine',
     showConfigCounts: false,
     showCost: false,
     showRoutedCost: false,
@@ -426,6 +431,7 @@ const RULES: Record<string, Rule> = {
   'gitStatus.pushCriticalThreshold': floorAtLeastZero,
   'display.addedDirsLayout': oneOf(ADDED_DIRS_LAYOUTS),
   'display.contextValue': oneOf(CONTEXT_VALUE_MODES),
+  'display.contextPosition': oneOf(CONTEXT_POSITIONS),
   'display.labelOverrides': labelOverrides,
   'display.usageValue': oneOf(USAGE_VALUE_MODES),
   'display.toolNameMaxLength': count,

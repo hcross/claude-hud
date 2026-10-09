@@ -129,6 +129,23 @@ test('showContextTokens appends a decimal-compact used-token suffix in both layo
   assert.match(lines(ctx({ stdin, config: compact(config) }))[0], / █████░░░░░ 45% \(92\.2k tk\) \| my-project$/);
 });
 
+test('contextPosition "projectLine" inlines the bar after the model badge', () => {
+  const config = { display: { contextPosition: 'projectLine' } };
+  const result = lines(ctx({ usageData: usage(), config }));
+  assert.equal(result[0], '[Opus] █████░░░░░ 45% │ my-project');
+  assert.equal(result.filter((line) => line.startsWith('Context ')).length, 0, 'no Context row remains');
+  // The shared 'model' key moves badge and bar as one unit.
+  const moved = { ...config, projectLineOrder: ['project', 'model'] };
+  assert.equal(lines(ctx({ usageData: usage(), config: moved }))[0], 'my-project │ [Opus] █████░░░░░ 45%');
+  // The token breakdown rides on the inline part at high context.
+  const high = {
+    stdin: { context_window: { context_window_size: 200000, used_percentage: 90, current_usage: { input_tokens: 90000 } } },
+  };
+  assert.match(lines(ctx({ ...high, usageData: usage(), config }))[0], /\[Opus\] .* 90% \(in: 90k, cache: 0\) │ my-project$/);
+  // Compact already rides the bar with the badge; the option changes nothing there.
+  assert.ok(lines(ctx({ usageData: usage(), config: compact(config) }))[0].startsWith('[Opus] █████░░░░░ 45% | my-project'));
+});
+
 test('labelOverrides rename the bar labels and feed the align column', () => {
   const data = usage({ sevenDay: 85 });
   const config = { display: { labelOverrides: { context: 'Ctx', usage: 'Usg', weekly: 'Wkl' } } };

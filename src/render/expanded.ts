@@ -3,7 +3,7 @@ import { DEFAULT_ELEMENT_ORDER, DEFAULT_MERGE_GROUPS, DEFAULT_PROJECT_LINE_ORDER
 import type { Frame } from './frame.js';
 import { activityLine } from './activity.js';
 import { separatorLine, visibleWidth } from './ansi.js';
-import { contextLine } from './context.js';
+import { contextLine, contextPart, tokenBreakdown } from './context.js';
 import type { LabelAlign } from './labels.js';
 import { addedDirsLine, cacheHitRateLine, environmentLine, memoryLine, promptCacheLine, sessionTimeLine } from './lines.js';
 import { orderParts } from './order.js';
@@ -24,7 +24,14 @@ function projectLine(f: Frame): string | null {
     if (text) parts.push({ key, text });
   };
   add(customLinePart(f, 'first'));
-  if (display?.showModel !== false) add(modelBadge(f), 'model');
+  // The context bar rides the badge's own part (sharing the 'model' key) so
+  // projectLineOrder moves badge and bar together; tokenBreakdown rides too.
+  const inline = display?.contextPosition === 'projectLine' ? `${contextPart(f)}${tokenBreakdown(f)}` : null;
+  if (display?.showModel !== false) {
+    add(inline ? `${modelBadge(f)} ${inline}` : modelBadge(f), 'model');
+  } else if (inline) {
+    add(inline, 'model');
+  }
   for (const part of projectParts(f, 'expanded')) add(part, 'project');
   add(advisorPart(f), 'advisor');
   add(sessionNamePart(f), 'sessionName');

@@ -3,7 +3,7 @@ import { t } from '../i18n/index.js';
 import type { Frame } from './frame.js';
 import { activityLine, type ActivityElement } from './activity.js';
 import { separatorLine, visibleWidth } from './ansi.js';
-import { contextBarAndValue, tokenBreakdown } from './context.js';
+import { contextPart, tokenBreakdown } from './context.js';
 import { cacheHitRateLine, promptCacheLine, sessionTimeLine } from './lines.js';
 import { orderParts } from './order.js';
 import {
@@ -17,8 +17,7 @@ const ACTIVITY: ActivityElement[] = ['tools', 'skills', 'mcp', 'agents', 'todos'
 // The context bar rides with the model badge, so the cluster moves as the 'model' segment.
 function modelCluster(f: Frame): string {
   const display = f.config?.display;
-  const { bar, value } = contextBarAndValue(f);
-  return [display?.showModel !== false ? modelBadge(f) : null, bar, value].filter(Boolean).join(' ');
+  return [display?.showModel !== false ? modelBadge(f) : null, contextPart(f)].filter(Boolean).join(' ');
 }
 
 function sessionLine(f: Frame): string {

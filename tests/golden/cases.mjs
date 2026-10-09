@@ -142,6 +142,14 @@ const options = {
   'usageBarEnabled=false': { display: { usageBarEnabled: false } },
   'usageCompact=true': { display: { usageCompact: true } },
   'showResetLabel=false': { display: { showResetLabel: false } },
+  'compactResetTime': { display: { compactResetTime: true } },
+  'labelOverrides': { display: { labelOverrides: { context: 'Ctx', usage: 'Usg', weekly: 'Wkl' } } },
+  'showContextTokens': { display: { showContextTokens: true } },
+  'contextPosition=projectLine': { display: { contextPosition: 'projectLine' } },
+  'contextPosition=projectLine+order': {
+    display: { contextPosition: 'projectLine' },
+    projectLineOrder: ['project', 'model'],
+  },
   'timeFormat=absolute': { display: { timeFormat: 'absolute' } },
   'timeFormat=both': { display: { timeFormat: 'both' } },
   'timeFormat=elapsed': { display: { timeFormat: 'elapsed' } },
@@ -225,6 +233,7 @@ for (const name of ['typical', 'apiUser', 'contextCritical', 'limitReached', 'nu
 }
 add('compact/git-dirty@40', { stdin: typical, config: { lineLayout: 'compact' }, git: 'dirty', columns: 40 });
 add('compact/usageCompact', { stdin: typical, config: { lineLayout: 'compact', display: { usageCompact: true } } });
+add('compact/contextPosition=projectLine', { stdin: typical, config: { lineLayout: 'compact', display: { contextPosition: 'projectLine' } } });
 
 const ACTIVITY = { display: { showTools: true, showAgents: true, showTodos: true } };
 add('activity/expanded', { stdin: typical, config: ACTIVITY, transcript: 'transcript-activity.jsonl' });

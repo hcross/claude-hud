@@ -47,7 +47,15 @@ export function tokenBreakdown(f: Frame): string {
   return label(` (${t('format.in')}: ${input}, ${t('format.cache')}: ${cache})`, f.config?.colors);
 }
 
-export function contextLine(f: Frame, align: LabelAlign = {}): string {
+/** The label-less `bar value (+ tokens)` part; compact's model cluster and the projectLine position share it. */
+export function contextPart(f: Frame): string {
+  const { bar, value } = contextBarAndValue(f);
+  return [bar, value].filter(Boolean).join(' ');
+}
+
+export function contextLine(f: Frame, align: LabelAlign = {}): string | null {
+  // The bar rides on the first line instead; the Context row stays empty.
+  if (f.config?.display?.contextPosition === 'projectLine') return null;
   const { bar, value } = contextBarAndValue(f);
   const prefix = barLabel('label.context', f.config?.colors, align, f.config?.display);
   return `${prefix} ${bar ? `${bar} ` : ''}${value}${tokenBreakdown(f)}`;

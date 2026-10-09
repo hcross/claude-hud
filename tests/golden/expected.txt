@@ -128,6 +128,26 @@
 \e[0m\e[36m[Opus 5.5]\e[0m │ \e]8;;file://<BASE>/home/dev/my-project\e\\e[33mmy-project\e[0m\e]8;;\e\
 \e[0m\e[2mContext\e[0m \e[32m█████\e[2m░░░░░\e[0m \e[32m45%\e[0m │ \e[2mUsage\e[0m \e[94m███\e[2m░░░░░░░\e[0m \e[94m25%\e[0m (1h 30m)
 
+### option/compactResetTime
+\e[0m\e[36m[Opus 5.5]\e[0m │ \e]8;;file://<BASE>/home/dev/my-project\e\\e[33mmy-project\e[0m\e]8;;\e\
+\e[0m\e[2mContext\e[0m \e[32m█████\e[2m░░░░░\e[0m \e[32m45%\e[0m │ \e[2mUsage\e[0m \e[94m███\e[2m░░░░░░░\e[0m \e[94m25%\e[0m (⏰1h30)
+
+### option/labelOverrides
+\e[0m\e[36m[Opus 5.5]\e[0m │ \e]8;;file://<BASE>/home/dev/my-project\e\\e[33mmy-project\e[0m\e]8;;\e\
+\e[0m\e[2mCtx\e[0m \e[32m█████\e[2m░░░░░\e[0m \e[32m45%\e[0m │ \e[2mUsg\e[0m \e[94m███\e[2m░░░░░░░\e[0m \e[94m25%\e[0m (resets in 1h 30m)
+
+### option/showContextTokens
+\e[0m\e[36m[Opus 5.5]\e[0m │ \e]8;;file://<BASE>/home/dev/my-project\e\\e[33mmy-project\e[0m\e]8;;\e\
+\e[0m\e[2mContext\e[0m \e[32m█████\e[2m░░░░░\e[0m \e[32m45%\e[0m\e[2m (91.2k tk)\e[0m │ \e[2mUsage\e[0m \e[94m███\e[2m░░░░░░░\e[0m \e[94m25%\e[0m (resets in 1h 30m)
+
+### option/contextPosition=projectLine
+\e[0m\e[36m[Opus 5.5]\e[0m \e[32m█████\e[2m░░░░░\e[0m \e[32m45%\e[0m │ \e]8;;file://<BASE>/home/dev/my-project\e\\e[33mmy-project\e[0m\e]8;;\e\
+\e[0m\e[2mUsage\e[0m \e[94m███\e[2m░░░░░░░\e[0m \e[94m25%\e[0m (resets in 1h 30m)
+
+### option/contextPosition=projectLine+order
+\e[0m\e]8;;file://<BASE>/home/dev/my-project\e\\e[33mmy-project\e[0m\e]8;;\e\ │ \e[36m[Opus 5.5]\e[0m \e[32m█████\e[2m░░░░░\e[0m \e[32m45%\e[0m
+\e[0m\e[2mUsage\e[0m \e[94m███\e[2m░░░░░░░\e[0m \e[94m25%\e[0m (resets in 1h 30m)
+
 ### option/timeFormat=absolute
 \e[0m\e[36m[Opus 5.5]\e[0m │ \e]8;;file://<BASE>/home/dev/my-project\e\\e[33mmy-project\e[0m\e]8;;\e\
 \e[0m\e[2mContext\e[0m \e[32m█████\e[2m░░░░░\e[0m \e[32m45%\e[0m │ \e[2mUsage\e[0m \e[94m███\e[2m░░░░░░░\e[0m \e[94m25%\e[0m (resets at 01:30 PM)
@@ -527,6 +547,9 @@
 
 ### compact/usageCompact
 \e[0m\e[36m[Opus 5.5]\e[0m \e[32m█████\e[2m░░░░░\e[0m \e[32m45%\e[0m | \e[33mmy-project\e[0m | \e[2m5h:\e[0m \e[94m25%\e[0m \e[2m(1h 30m)\e[0m
+
+### compact/contextPosition=projectLine
+\e[0m\e[36m[Opus 5.5]\e[0m \e[32m█████\e[2m░░░░░\e[0m \e[32m45%\e[0m | \e[33mmy-project\e[0m | \e[2mUsage\e[0m \e[94m███\e[2m░░░░░░░\e[0m \e[94m25%\e[0m (1h 30m / 5h)
 
 ### activity/expanded
 \e[0m\e[36m[Opus 5.5]\e[0m │ \e]8;;file://<BASE>/home/dev/my-project\e\\e[33mmy-project\e[0m\e]8;;\e\

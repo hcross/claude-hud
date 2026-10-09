@@ -119,6 +119,7 @@ Claude HUD 是一个[状态栏](https://code.claude.com/docs/en/statusline)命�
 | `display.addedDirsLayout` | `inline` \| `line` | `inline` | `inline` 将目录放在项目名称旁边，每个目录带 `+name` 前缀；`line` 在单独的 `Added dirs: name1, name2` 行渲染（无 `+` 前缀，逗号分隔） |
 | `display.showContextBar` | boolean | true | 显示可视化上下文进度条 `████░░░░░░` |
 | `display.contextValue` | `percent` \| `tokens` \| `remaining` \| `both` | `percent` | 上下文显示格式（`45%`、`45k/200k`、剩余 `55%` 或 `45% (45k/200k)`） |
+| `display.contextPosition` | `ownLine` \| `projectLine` | `ownLine` | 上下文进度条的位置：独占一行（`ownLine`），或内联在首行模型徽标之后（`projectLine`） |
 | `display.autoCompactWindow` | number \| `null` | `null` | 设为正数（如 `200000`）时，按此自动压缩窗口而不是完整模型上下文窗口计算上下文百分比，以匹配 `/context`。留空或 `null` 保持默认全窗口行为 |
 | `display.showConfigCounts` | boolean | false | 显示 CLAUDE.md、rules、MCPs、hooks 数量 |
 | `display.environmentThreshold` | number | 0 | 配置计数总和达到此值前隐藏（0 = 始终显示） |
