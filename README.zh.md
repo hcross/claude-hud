@@ -218,6 +218,10 @@ Context █████░░░░░ 45% │ Usage ██░░░░░░░
 
 `display.externalUsageWritePath` 则反过来：把 stdin 的使用率限制写入一个已存在目录中的私有 `.json` 文件，供其他工具读取。
 
+`display.externalBalanceLabelMode` 控制 `balance_label` 何时并入 stdin 用量。默认 `always` 保持上游行为；`ollama-cloud` 仅当显示模型以 `:cloud` 结尾（忽略大小写前后空白）时并入，这样一份同时服务 Anthropic 凭据会话的快照不会带上不适用的积分徽标。两种模式下用量窗口都会照常补齐。
+
+一种生成快照的方式是 [`hcross/ollama-usage`](https://github.com/hcross/ollama-usage) 轮询器：`systemd` 服务（或普通脚本）查询 Ollama Cloud 账户并写入本格式（含 `balance_label`），供 HUD 和其他本地工具使用。
+
 ### 费用
 
 `display.showCost` 显示 Claude Code 自己计算的会话费用（按标价，或使用你的 `modelPricing` 表）。Bedrock 和 Vertex 通过云服务商计费，因此除非同时设置 `display.showRoutedCost`，否则不显示它们的费用。

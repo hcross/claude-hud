@@ -218,6 +218,10 @@ With `display.usagePace`, a window you're using faster than it refills turns amb
 
 `display.externalUsageWritePath` does the reverse: it writes stdin's rate limits to a private `.json` file in an existing directory for other tools to read.
 
+`display.externalBalanceLabelMode` controls when `balance_label` adds to stdin usage. The default `always` keeps the upstream behavior; `ollama-cloud` merges it only when the displayed model name ends in `:cloud` (trim and case ignored), so a snapshot that also holds Anthropic-credentialed sessions stays free of a credits badge that does not apply to them. Windows fill the gaps in both modes.
+
+One way to produce a snapshot is the [`hcross/ollama-usage`](https://github.com/hcross/ollama-usage) poller: a `systemd` service (or a plain shell script) that queries an Ollama Cloud account and writes this format, `balance_label` included, for the HUD and other local tools.
+
 ### Cost
 
 `display.showCost` shows Claude Code's own session cost, computed at list price or from your `modelPricing` table. Bedrock and Vertex bill through the cloud provider, so their cost is hidden unless `display.showRoutedCost` is also set.
