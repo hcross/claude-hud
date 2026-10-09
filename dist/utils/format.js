@@ -1,31 +1,66 @@
-/** `1.2M`, `45k`, or `800`. */
+import { getTotalTokens } from '../stdin.js';
+/**
+ * Format a token count into a human-readable short string.
+ *   >= 1M  → "1.2M"
+ *   >= 1k  → "45k"
+ *   < 1k   → "800"
+ */
 export function formatTokens(n) {
-    if (n >= 1000000)
+    if (n >= 1000000) {
         return `${(n / 1000000).toFixed(1)}M`;
-    if (n >= 1000)
+    }
+    if (n >= 1000) {
         return `${(n / 1000).toFixed(0)}k`;
+    }
     return n.toString();
 }
-// percent → "45%", tokens → "45k/200k", remaining → "55%", both → "45% (45k/200k)".
-export function formatContextValue(context, mode) {
-    const { percent, tokens, size } = context;
-    const ratio = size > 0 ? `${formatTokens(tokens)}/${formatTokens(size)}` : formatTokens(tokens);
-    if (mode === 'tokens')
-        return ratio;
-    if (mode === 'both')
-        return size > 0 ? `${percent}% (${ratio})` : `${percent}%`;
-    if (mode === 'remaining')
+/**
+ * Format the context-window value for display.
+ *   percent   → "45%"
+ *   tokens    → "45k/200k"
+ *   remaining → "55%"
+ *   both      → "45% (45k/200k)"
+ */
+export function formatContextValue(ctx, percent, mode) {
+    const totalTokens = getTotalTokens(ctx.stdin);
+    const autoCompactWindow = ctx.config?.display?.autoCompactWindow ?? null;
+    const size = typeof autoCompactWindow === 'number' && autoCompactWindow > 0
+        ? autoCompactWindow
+        : ctx.stdin.context_window?.context_window_size ?? 0;
+    if (mode === 'tokens') {
+        if (size > 0) {
+            return `${formatTokens(totalTokens)}/${formatTokens(size)}`;
+        }
+        return formatTokens(totalTokens);
+    }
+    if (mode === 'both') {
+        if (size > 0) {
+            return `${percent}% (${formatTokens(totalTokens)}/${formatTokens(size)})`;
+        }
+        return `${percent}%`;
+    }
+    if (mode === 'remaining') {
         return `${Math.max(0, 100 - percent)}%`;
+    }
     return `${percent}%`;
 }
-export function formatSessionDuration(ms) {
-    if (typeof ms !== 'number' || !Number.isFinite(ms) || ms < 0)
-        return '';
-    const mins = Math.floor(ms / 60000);
-    if (mins < 1)
-        return '<1m';
-    if (mins < 60)
-        return `${mins}m`;
-    return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+/**
+ * Format a token count in a finer human-readable form (with decimals kept):
+ *   >= 1M  → "1.23m"   (two decimals, trailing zeros trimmed)
+ *   >= 1k  → "3.4k"    (one decimal, trailing zeros trimmed)
+ *   < 1k   → "135"
+ * Callers append the unit (e.g. " tk").
+ */
+export function formatTokensCompact(n) {
+    if (n >= 1000000) {
+        return `${trimTrailingZeros((n / 1000000).toFixed(2))}m`;
+    }
+    if (n >= 1000) {
+        return `${trimTrailingZeros((n / 1000).toFixed(1))}k`;
+    }
+    return `${n}`;
+}
+function trimTrailingZeros(s) {
+    return s.replace(/\.?0+$/, "");
 }
 //# sourceMappingURL=format.js.map
