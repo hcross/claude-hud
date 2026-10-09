@@ -116,6 +116,19 @@ test('compactResetTime prefixes ⏰ and glues the countdown in every slot', () =
   assert.match(lines(ctx({ usageData: limited, config }))[1], /Usage ⚠ Limit reached \(⏰1h30\) \| ¥6\.35$/);
 });
 
+test('showContextTokens appends a decimal-compact used-token suffix in both layouts', () => {
+  const stdin = {
+    context_window: {
+      context_window_size: 200000,
+      used_percentage: 45,
+      current_usage: { input_tokens: 88000, output_tokens: 1200, cache_creation_input_tokens: 1500, cache_read_input_tokens: 1500 },
+    },
+  };
+  const config = { display: { showContextTokens: true } };
+  assert.match(lines(ctx({ stdin, config }))[1], / █████░░░░░ 45% \(92\.2k tk\)$/);
+  assert.match(lines(ctx({ stdin, config: compact(config) }))[0], / █████░░░░░ 45% \(92\.2k tk\) \| my-project$/);
+});
+
 test('labelOverrides rename the bar labels and feed the align column', () => {
   const data = usage({ sevenDay: 85 });
   const config = { display: { labelOverrides: { context: 'Ctx', usage: 'Usg', weekly: 'Wkl' } } };

@@ -142,6 +142,8 @@ export interface HudConfig {
     showDuration: boolean;
     showSpeed: boolean;
     showTokenBreakdown: boolean;
+    // Used-context tokens as a decimal-compact ` (91.2k tk)` suffix on the bar value.
+    showContextTokens: boolean;
     showUsage: boolean;
     usageValue: UsageValueMode;
     usageBarEnabled: boolean;
@@ -246,6 +248,7 @@ export const DEFAULT_CONFIG: HudConfig = {
     showDuration: false,
     showSpeed: false,
     showTokenBreakdown: true,
+    showContextTokens: false,
     showUsage: true,
     usageValue: 'percent',
     usageBarEnabled: true,

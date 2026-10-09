@@ -147,6 +147,7 @@ Claude HUD 是一个[状态栏](https://code.claude.com/docs/en/statusline)命�
 | `display.externalUsageFreshnessMs` | number | `300000` | 外部使用率快照允许的最长存活时间，超时后会被忽略 |
 | `display.showBalanceLabel` | boolean | true | 在使用率行上显示外部用量快照的 `balance_label` |
 | `display.showTokenBreakdown` | boolean | true | 在高上下文时（85%+）显示 Token 详情 |
+| `display.showContextTokens` | boolean | false | 在上下文数值后追加已用 Token（含输出），十进制紧凑格式，如 ` (91.2k tk)` |
 | `display.contextWarningThreshold` | 0-100 | 70 | 上下文进度条变为警告色的百分比 |
 | `display.contextCriticalThreshold` | 0-100 | 85 | 上下文进度条变为严重色并显示 token 明细的百分比 |
 | `display.showTools` | boolean | false | 显示工具活动行 |
