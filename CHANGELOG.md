@@ -2,7 +2,15 @@
 
 All notable changes to Claude HUD will be documented in this file.
 
-## [Unreleased]
+## [0.11.0] - 2026-10-09
+
+### Added
+- `display.labelOverrides` option to shorten the bar labels (`context`/`usage`/`weekly`/`approxRam`), capped at 12 characters, unknown keys ignored.
+- `display.compactResetTime` option to drop the countdown wording and glue the units, prefixed with `⏰`: `(⏰3h30)` instead of `(resets in 3h 30m)`.
+- `display.showBalanceLabel` option to hide the external usage snapshot's `balance_label` (`true` by default).
+- `display.showContextTokens` option to append the used-context tokens, output included, as a decimal-compact ` (91.2k tk)` suffix on the context value.
+- `display.contextPosition` option (`ownLine`, the default, or `projectLine`) to ride the context bar inline on the first line, right after the model badge; `projectLineOrder` then moves badge and bar together.
+- `display.externalBalanceLabelMode` option (`always`, the default, or `ollama-cloud`) to merge the external snapshot's `balance_label` only when the displayed model is Ollama Cloud-served (`:cloud`).
 
 ### Fixed
 - A folder name containing ` │ ` no longer leaves the project link open over the rest of the HUD when line 1 wraps.
