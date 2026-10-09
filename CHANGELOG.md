@@ -2,26 +2,83 @@
 
 All notable changes to Claude HUD will be documented in this file.
 
-## [Unreleased]
+## [0.11.0] - 2026-10-09
 
 ### Added
-- `display.showDailyCost` option to show today's cumulative spend across sessions (`Today $12.34`), accumulated from the native stdin `cost.total_cost_usd` into a per-day ledger that resets at local midnight (#695).
-- `display.compactResetTime` option to compact the reset-time suffix: `resets in 3h 32m` renders as `(⏰3h32)` (unit separators stripped, minutes unit dropped when hours are present), overriding `showResetLabel` (#1).
-- `display.labelOverrides` option to replace the progress-bar labels (`context`, `usage`, `weekly`, `approxRam`) with custom text such as `Ctx`/`Usg`/`Wkl`; overridden text also drives the label-column alignment width (#1).
-- `display.showBalanceLabel` option to hide the external usage snapshot's `balance_label` (e.g. `Ollama Pro`) (#1).
-- `display.showContextTokens` option to append the context token count after the percent value in human-readable form (`135 tk`, `3.4k tk`, `1.23m tk`) (#2).
-- `display.contextPosition` option to render the context bar inline on the project line (`projectLine`), between the model badge and the project segment without its label; the standalone context line disappears and the merged context/usage line falls back to usage only (#5).
+- `display.labelOverrides` option to shorten the bar labels (`context`/`usage`/`weekly`/`approxRam`), capped at 12 characters, unknown keys ignored.
+- `display.compactResetTime` option to drop the countdown wording and glue the units, prefixed with `⏰`: `(⏰3h30)` instead of `(resets in 3h 30m)`.
+- `display.showBalanceLabel` option to hide the external usage snapshot's `balance_label` (`true` by default).
+- `display.showContextTokens` option to append the used-context tokens, output included, as a decimal-compact ` (91.2k tk)` suffix on the context value.
+- `display.contextPosition` option (`ownLine`, the default, or `projectLine`) to ride the context bar inline on the first line, right after the model badge; `projectLineOrder` then moves badge and bar together.
+- `display.externalBalanceLabelMode` option (`always`, the default, or `ollama-cloud`) to merge the external snapshot's `balance_label` only when the displayed model is Ollama Cloud-served (`:cloud`).
 
 ### Fixed
+- A folder name containing ` │ ` no longer leaves the project link open over the rest of the HUD when line 1 wraps.
+
+## [0.10.0] - 2026-10-01
+
+This release is a rewrite for simplicity, with the same options in about half the source and a quarter of the test code. It needs Claude Code v2.1.260 or later.
+
+### Changed
+- Read `version`, `cost`, `prompt_cache`, `session_name`, `output_style`, and `workspace.repo` from Claude Code's stdin instead of deriving them.
+- The prompt-cache expiry and hit rate come from Claude Code's `prompt_cache`, so the expiry no longer reads `expired` while the cache is warm.
+- `display.showCost` shows Claude Code's own cost; the local pricing-table estimate is removed.
+- Context percentage always follows Claude Code's `used_percentage`, falling back to the last request's size in the transcript when Claude Code reports none. `display.autocompactBuffer` and `display.promptCacheTtlSeconds` no longer exist.
+- Session duration is Claude Code's running time for the session.
+- Git status comes from one `git status --porcelain=v2` call, down from four or five, and the branch link comes from `workspace.repo`. A repository with no commits now shows its branch.
+- The compact layout gains expanded's branch link and push-threshold colours, and `display.timeFormat: "elapsed"` now works there.
+- `/claude-hud:setup` installs a small launcher and writes `settings.json` with a helper script instead of hand-built shell commands. Existing setups keep working; re-run setup to switch. It asks nothing unless it would replace another status line; customize afterwards by asking Claude or with `/claude-hud:configure`. A `refreshInterval` you set yourself is kept.
+- `/claude-hud:configure` asks one short set of questions and previews the diff.
+- The default HUD no longer parses the transcript, runs `claude --version`, or keeps context or transcript caches on disk.
+
+### Fixed
+- The macOS memory reading no longer blocks the rest of the render.
+- The daily cost ledger no longer throws on a non-string `session_id`.
+
+### Security
+- Sanitize the output style, tool names, tool targets (paths, Grep patterns, Bash commands), todo text, and the model name before display. They reached the terminal raw.
+- `/claude-hud:setup` writes `settings.json` through a dotfiles symlink and keeps its permissions.
+
+## [0.9.0] - 2026-10-01
+
+### Added
+- `gitStatus.showWorktree` option to show the linked worktree name after the branch, e.g. `git:(feat/x) ⎇ feat-x`, read from stdin `workspace.git_worktree` (#780).
+- `display.usagePace` option to colour usage windows amber or red, marked `▲`, when they are on track to run out before they reset (#779).
+- `display.skillsMaxVisible` option to control how many skill names the skills line shows before `+N more`; `0` means unlimited, default stays 4 (#739).
+- `display.showWeeklyCost` option to show spend since the weekly quota window opened (`Week $123.45`), from the same ledger as `showDailyCost`; subscribers only (#762).
+- `display.showDailyCost` option to show today's cumulative spend across sessions (`Today $12.34`), accumulated from the native stdin `cost.total_cost_usd` into a per-day ledger that resets at local midnight (#695).
+- `display.showCacheHitRate` option to show the session's prompt-cache hit rate as `Cache hit X%` (#741).
+- Expand a leading `~` and `${VAR}` in `display.externalUsagePath` and `display.externalUsageWritePath` (#760).
+- `display.showModelScopedUsage` option to hide the per-model weekly windows (e.g. Fable) while keeping the 5h/7d windows (#728).
+
+### Fixed
+- Read `.claude.json` from inside `CLAUDE_CONFIG_DIR` when it is set, as Claude Code does, so `showAuth`, `showAuthUser`, and MCP counts work with a custom config directory (#776).
 - Refresh the prompt-cache clock when a request starts rather than when its response arrives, ignoring client-side slash command records, interrupt markers, and subagent requests (#719).
 - Treat Agent `tool_result` payloads with `isAsync` or `status: async_launched` as background so the agents line stays up until the task-notification (#734).
 - Pass `--no-optional-locks` on `git diff --numstat` so a timed-out statusline poll cannot leave `.git/index.lock` behind (#726).
 - Render the prompt-cache clock as `until <time>` so the value reads as expiry, not write time (#727).
-- Pin a pre-promo clock in the Claude 5 point-release pricing test, which time-bombed once the Sonnet 5 introductory pricing ended on 2026-09-01.
+- Price 1-hour prompt-cache writes at 2x input instead of 1.25x in the local cost estimate (#758).
+- Show the running session's Claude Code version from stdin, falling back to `claude --version`, so `CC v…` no longer sticks when `claude` is a wrapper script (#753).
+- Keep the context cache fresh when Claude Code reports `used_percentage: 0` while `current_usage` already holds real tokens, so a later empty frame no longer restores a stale percentage (#743).
+- Show the latest response's output speed from the API time it added instead of diffing tokens against wall-clock time between renders (#772).
+- Launch the Windows + Git Bash statusline through the `cmd.exe` launcher so a statusLine shell killed mid-spawn can no longer strand a suspended `node.exe`; re-run `/claude-hud:setup` to pick it up (#748).
+- Ignore `<synthetic>` assistant records when tracking the transcript model (#774).
+- Show Claude Code's generated `ai-title` as the session name when the session was never renamed (#754).
+- Decode every C-style escape git uses in quoted porcelain paths (#765).
+- Count unmerged (`UU`, `UA`) paths in git file stats (#763).
+- Translate the elapsed usage-window suffix (#768).
+
+### Security
+- Exit quietly when the setup command cannot resolve the plugin directory instead of running `dist/index.js` relative to the current project; re-run `/claude-hud:setup` to pick it up (#759).
+- Sanitize session names before display (#754).
+- Validate and read config files through a single file descriptor so a file swapped between the checks cannot bypass them (#732).
+
+### Dependencies
+- Update the development-only `@types/node` package from 26.2.0 to 26.6.2 (#775).
 
 ### Docs
+- Document the HUD scope bar in `CONTRIBUTING.md` (#738).
 - Add the ten missing config options and the absolute-path caveat for `display.externalUsagePath` to `README.zh.md` (#730).
-- Document `display.externalBalanceLabelMode` in `README.zh.md` (missed when the option landed).
 
 ## [0.8.0] - 2026-08-18
 
