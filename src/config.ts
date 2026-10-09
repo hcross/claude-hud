@@ -28,6 +28,8 @@ const TIME_FORMATS = ['relative', 'absolute', 'both', 'elapsed', 'elapsedAndAbso
 const HOUR_CYCLES = ['auto', 'h11', 'h12', 'h23', 'h24'] as const;
 const CUSTOM_LINE_POSITIONS = ['first', 'last'] as const;
 const ADDED_DIRS_LAYOUTS = ['inline', 'line'] as const;
+// When the snapshot's balance_label may ride the usage line.
+const EXTERNAL_BALANCE_LABEL_MODES = ['always', 'ollama-cloud'] as const;
 const COLOR_NAMES = ['dim', 'red', 'green', 'yellow', 'magenta', 'cyan', 'brightBlue', 'brightMagenta'] as const;
 
 const ELEMENTS = [
@@ -65,6 +67,7 @@ export type LineLayoutType = typeof LINE_LAYOUTS[number];
 export type PathLevels = typeof PATH_LEVELS[number];
 export type ContextValueMode = typeof CONTEXT_VALUE_MODES[number];
 export type ContextPosition = typeof CONTEXT_POSITIONS[number];
+export type ExternalBalanceLabelMode = typeof EXTERNAL_BALANCE_LABEL_MODES[number];
 export type UsageValueMode = typeof USAGE_VALUE_MODES[number];
 export type GitBranchOverflowMode = typeof GIT_BRANCH_OVERFLOW_MODES[number];
 export type ModelFormatMode = typeof MODEL_FORMATS[number];
@@ -195,6 +198,8 @@ export interface HudConfig {
     externalUsagePath: string;
     externalUsageWritePath: string;
     externalUsageFreshnessMs: number;
+    // always: merge the snapshot's balance_label; ollama-cloud: only for `:cloud` models.
+    externalBalanceLabelMode: ExternalBalanceLabelMode;
     modelFormat: ModelFormatMode;
     modelOverride: string;
     // auto: transcript model for non-Claude (proxied) models; stdin/transcript: always that source.
@@ -297,6 +302,7 @@ export const DEFAULT_CONFIG: HudConfig = {
     externalUsagePath: '',
     externalUsageWritePath: '',
     externalUsageFreshnessMs: 300000,
+    externalBalanceLabelMode: 'always',
     modelFormat: 'full',
     modelOverride: '',
     modelSource: 'stdin',
@@ -449,6 +455,7 @@ const RULES: Record<string, Rule> = {
   'display.externalUsagePath': usagePath,
   'display.externalUsageWritePath': usagePath,
   'display.externalUsageFreshnessMs': floorAtLeastZero,
+  'display.externalBalanceLabelMode': oneOf(EXTERNAL_BALANCE_LABEL_MODES),
   'display.modelFormat': oneOf(MODEL_FORMATS),
   'display.modelOverride': text(80),
   'display.modelSource': oneOf(MODEL_SOURCES),

@@ -147,6 +147,7 @@ Labels are available in English (the default), Simplified Chinese (`zh-Hans`, al
 | `display.externalUsageWritePath` | string | `""` | Optional absolute `.json` path in an existing directory. A leading `~` and `${VAR}` are expanded. When stdin `rate_limits` exists, ClaudeHUD writes a private snapshot for other local tools. Relative paths, non-json files, and missing parent directories are ignored |
 | `display.externalUsageFreshnessMs` | number | `300000` | Maximum allowed age for the external usage snapshot before it is ignored |
 | `display.showBalanceLabel` | boolean | true | Show the external usage snapshot's `balance_label` on the usage line |
+| `display.externalBalanceLabelMode` | `always` \| `ollama-cloud` | `always` | When the snapshot's `balance_label` merges onto stdin usage. `ollama-cloud` merges it only when the displayed model is Ollama Cloud-served (`:cloud`); windows fill in regardless |
 | `display.showTokenBreakdown` | boolean | true | Show token details at high context (85%+) |
 | `display.showContextTokens` | boolean | false | Append the used-context tokens, output included, as a decimal-compact ` (91.2k tk)` suffix on the context value |
 | `display.contextWarningThreshold` | 0-100 | 70 | Context percentage at which the context bar turns the warning colour |

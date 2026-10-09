@@ -18,13 +18,14 @@ async function withTempFile(content) {
   };
 }
 
-function makeConfig(filePath, freshnessMs = 300000) {
+function makeConfig(filePath, freshnessMs = 300000, displayOverrides = {}) {
   return {
     ...DEFAULT_CONFIG,
     display: {
       ...DEFAULT_CONFIG.display,
       externalUsagePath: filePath,
       externalUsageFreshnessMs: freshnessMs,
+      ...displayOverrides,
     },
   };
 }
@@ -440,6 +441,32 @@ test('resolveUsage prefers stdin and fills gaps from the snapshot', async () => 
     });
     assert.equal(resolveUsage(config, null, updatedAt)?.fiveHour, 90, 'snapshot stands in when stdin has none');
     assert.equal(resolveUsage(makeConfig(''), makeUsage(), updatedAt).balanceLabel, undefined);
+  } finally {
+    await cleanup();
+  }
+});
+
+test('externalBalanceLabelMode "ollama-cloud" merges the label only for :cloud models', async () => {
+  const updatedAt = Date.UTC(2026, 3, 20, 12, 0, 0);
+  const { filePath, cleanup } = await withTempFile(JSON.stringify({
+    updated_at: new Date(updatedAt).toISOString(),
+    five_hour: { used_percentage: 90, resets_at: null },
+    seven_day: { used_percentage: 60, resets_at: null },
+    balance_label: 'Cr: $4.20/$6.00 +$0.75',
+  }));
+  try {
+    const stdinUsage = makeUsage({ sevenDay: null, sevenDayResetAt: null });
+    const cloud = makeConfig(filePath, 300000, { externalBalanceLabelMode: 'ollama-cloud' });
+    // 'always' (the default) keeps upstream behavior whatever the model is.
+    assert.equal(resolveUsage(makeConfig(filePath), stdinUsage, updatedAt, 'Opus')?.balanceLabel, 'Cr: $4.20/$6.00 +$0.75');
+    // Trim and case are ignored; any other model stays unlabeled...
+    assert.equal(resolveUsage(cloud, stdinUsage, updatedAt, ' GLM 5.3 Flash :CLOUD ')?.balanceLabel, 'Cr: $4.20/$6.00 +$0.75');
+    assert.equal(resolveUsage(cloud, stdinUsage, updatedAt, 'Opus')?.balanceLabel, undefined);
+    assert.equal(resolveUsage(cloud, stdinUsage, updatedAt)?.balanceLabel, undefined);
+    // ...but the snapshot's windows still fill the gaps for non-cloud models.
+    const merged = resolveUsage(cloud, stdinUsage, updatedAt, 'Opus');
+    assert.equal(merged?.sevenDay, 60);
+    assert.equal(resolveUsage(makeConfig(''), stdinUsage, updatedAt).sevenDay, null);
   } finally {
     await cleanup();
   }

@@ -99,6 +99,11 @@ export function getModelName(stdin: StdinData): string {
   return stdin.model?.display_name?.trim() || stdin.model?.id?.trim() || 'Unknown';
 }
 
+/** `glm-5.3-flash:cloud` and cousins: Ollama Cloud-served models, trim/lowercase-insensitive. */
+export function isOllamaCloudModel(displayName: string | undefined | null): boolean {
+  return typeof displayName === 'string' && displayName.trim().toLowerCase().endsWith(':cloud');
+}
+
 function isClaudeModel(model: string): boolean {
   const lower = model.toLowerCase();
   return lower.startsWith('claude-') || lower.startsWith('anthropic.');
