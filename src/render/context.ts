@@ -37,6 +37,6 @@ export function tokenBreakdown(f: Frame): string {
 
 export function contextLine(f: Frame, align: LabelAlign = {}): string {
   const { bar, value } = contextBarAndValue(f);
-  const prefix = barLabel('label.context', f.config?.colors, align);
+  const prefix = barLabel('label.context', f.config?.colors, align, f.config?.display);
   return `${prefix} ${bar ? `${bar} ` : ''}${value}${tokenBreakdown(f)}`;
 }

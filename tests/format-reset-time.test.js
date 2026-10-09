@@ -29,6 +29,16 @@ test('relative rounds up to the minute and drops zero units', () => {
   assert.equal(relative(3 * DAY), '3d');
 });
 
+test('compact durations glue the units together, zero units still dropped', () => {
+  const COMPACT = { hourCycle: 'auto', showSeconds: false, compact: true };
+  assert.equal(formatResetTime(at(1), 'relative', COMPACT, NOW), '1m');
+  assert.equal(formatResetTime(at(3 * HOUR + 30 * MINUTE), 'relative', COMPACT, NOW), '3h30');
+  assert.equal(formatResetTime(at(3 * HOUR), 'relative', COMPACT, NOW), '3h');
+  assert.equal(formatResetTime(at(6 * DAY + 7 * HOUR), 'relative', COMPACT, NOW), '6d7h');
+  assert.equal(formatResetTime(at(3 * DAY), 'relative', COMPACT, NOW), '3d');
+  assert.equal(formatResetTime(at(2 * HOUR), 'both', COMPACT, NOW), '2h, at 14:00');
+});
+
 test('absolute shows the clock today and adds the date on another day', () => {
   assert.equal(formatResetTime(at(2 * HOUR + 30 * MINUTE), 'absolute', H23, NOW), 'at 14:30');
   const tomorrow = at(30 * HOUR);

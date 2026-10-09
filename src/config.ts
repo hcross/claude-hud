@@ -74,6 +74,10 @@ export type HudColorName = typeof COLOR_NAMES[number];
 export type HudElement = typeof ELEMENTS[number];
 export type FirstLineSegment = typeof FIRST_LINE_SEGMENTS[number];
 
+// Bar labels a user may shorten; overrides feed the align column too.
+export type ProgressLabelKey = 'context' | 'usage' | 'weekly' | 'approxRam';
+export const PROGRESS_LABEL_KEYS = ['context', 'usage', 'weekly', 'approxRam'] as const;
+
 /** A named preset, a 256-color index (0-255), or a #rrggbb hex string. */
 export type HudColorValue = HudColorName | number | string;
 
@@ -145,6 +149,11 @@ export interface HudConfig {
     usageCompact: boolean;
     showModelScopedUsage: boolean;
     usagePace: boolean;
+    compactResetTime: boolean;
+    // Short overrides of the bar labels; feeds the align column too.
+    labelOverrides: Partial<Record<ProgressLabelKey, string>>;
+    // false = hide the external snapshot's balance_label entirely.
+    showBalanceLabel: boolean;
     showTools: boolean;
     showSkills: boolean;
     showMcp: boolean;
@@ -244,6 +253,9 @@ export const DEFAULT_CONFIG: HudConfig = {
     usageCompact: false,
     showModelScopedUsage: true,
     usagePace: false,
+    compactResetTime: false,
+    labelOverrides: {},
+    showBalanceLabel: true,
     showTools: false,
     showSkills: false,
     showMcp: false,
@@ -342,6 +354,21 @@ const names = (known: readonly unknown[], nonEmpty: boolean): Rule => (value, fa
   return kept.length > 0 || !nonEmpty ? kept : fallback;
 };
 
+// Bar-label overrides: keep only known keys, sanitized and capped so a long
+// string never breaks the align column. Unknown keys are dropped, not fatal.
+const labelOverrides: Rule = (value, fallback) => {
+  if (!isPlainObject(value)) return fallback;
+  const out: Partial<Record<ProgressLabelKey, string>> = {};
+  for (const key of PROGRESS_LABEL_KEYS) {
+    const raw = (value as Record<string, unknown>)[key];
+    if (typeof raw === 'string') {
+      const clean = sanitizeDisplayText(raw).trim().slice(0, 12);
+      if (clean) out[key] = clean;
+    }
+  }
+  return out;
+};
+
 // Groups need two or more known elements, and an element joins at most one group.
 const mergeGroups: Rule = (value, fallback) => {
   if (!Array.isArray(value)) return fallback;
@@ -396,6 +423,7 @@ const RULES: Record<string, Rule> = {
   'gitStatus.pushCriticalThreshold': floorAtLeastZero,
   'display.addedDirsLayout': oneOf(ADDED_DIRS_LAYOUTS),
   'display.contextValue': oneOf(CONTEXT_VALUE_MODES),
+  'display.labelOverrides': labelOverrides,
   'display.usageValue': oneOf(USAGE_VALUE_MODES),
   'display.toolNameMaxLength': count,
   'display.toolsMaxVisible': count,

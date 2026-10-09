@@ -5,22 +5,29 @@ import { interpolate, t } from '../i18n/index.js';
 interface WallClockOptions {
   hourCycle: HourCycleMode;
   showSeconds: boolean;
+  /** Glue durations without spaces (`3h30`) for the compact reset times. */
+  compact?: boolean;
 }
 
 export function wallClock(display: Partial<HudConfig['display']> | undefined): WallClockOptions {
-  return { hourCycle: display?.hourCycle ?? 'auto', showSeconds: display?.showClockSeconds ?? false };
+  return {
+    hourCycle: display?.hourCycle ?? 'auto',
+    showSeconds: display?.showClockSeconds ?? false,
+    compact: display?.compactResetTime ?? false,
+  };
 }
 
-function formatDuration(ms: number): string {
+function formatDuration(ms: number, compact = false): string {
   const totalMins = Math.ceil(ms / 60000);
   if (totalMins < 60) return `${totalMins}m`;
   const hours = Math.floor(totalMins / 60);
   const mins = totalMins % 60;
   if (hours >= 24) {
     const days = Math.floor(hours / 24);
-    return hours % 24 > 0 ? `${days}d ${hours % 24}h` : `${days}d`;
+    return hours % 24 > 0 ? `${days}d${compact ? '' : ' '}${hours % 24}h` : `${days}d`;
   }
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  if (!compact) return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  return mins > 0 ? `${hours}h${mins}` : `${hours}h`;
 }
 
 /** Wall-clock time such as `at 14:30`, with the date when it isn't today. */
@@ -49,9 +56,9 @@ export function formatResetTime(
   if (!resetAt) return '';
   const remainingMs = resetAt.getTime() - now;
   if (remainingMs <= 0) return '';
-  if (mode === 'relative') return formatDuration(remainingMs);
+  if (mode === 'relative') return formatDuration(remainingMs, opts.compact);
   const absolute = formatAbsoluteTime(resetAt, new Date(now), opts);
-  return mode === 'absolute' ? absolute : `${formatDuration(remainingMs)}, ${absolute}`;
+  return mode === 'absolute' ? absolute : `${formatDuration(remainingMs, opts.compact)}, ${absolute}`;
 }
 
 function formatElapsed(resetAt: Date | null, windowMs: number, now: number): string {

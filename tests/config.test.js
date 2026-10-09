@@ -110,6 +110,17 @@ test('enum options accept only their listed values', () => {
   }
 });
 
+test('display.labelOverrides keeps known keys only, sanitized and capped', () => {
+  const merged = mergeConfig(withPath('display.labelOverrides', {
+    context: '  Ctx ', usage: 'x'.repeat(30), weekly: 'Wkl', approxRam: 'Ram',
+    bogus: 'nope', other: 5,
+  })).display.labelOverrides;
+  assert.deepEqual(merged, { context: 'Ctx', usage: 'x'.repeat(12), weekly: 'Wkl', approxRam: 'Ram' });
+  assert.deepEqual(mergeConfig({}).display.labelOverrides, {});
+  assert.deepEqual(mergeConfig(withPath('display.labelOverrides', 'nope')).display.labelOverrides, {});
+  assert.deepEqual(mergeConfig(withPath('display.labelOverrides', []))?.display.labelOverrides, DEFAULT_CONFIG.display.labelOverrides);
+});
+
 test('numeric options clamp, floor, or reject per key', () => {
   const cases = [
     ['maxWidth', 30.7, 30],

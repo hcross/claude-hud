@@ -102,6 +102,48 @@ test('a reached limit replaces the windows; compact drops the Usage label', () =
   assert.match(lines(ctx({ usageData: data, config: { display: { usageCompact: true } } }))[1], /│ ⚠ Limit \(1h 30m\) \| Fable: 60% \(1d 6h\) \| ¥6\.35$/);
 });
 
+test('compactResetTime prefixes ⏰ and glues the countdown in every slot', () => {
+  const data = usage({ sevenDay: 85, balanceLabel: '¥6.35' });
+  const config = { display: { compactResetTime: true } };
+  assert.equal(
+    lines(ctx({ usageData: data, config }))[1],
+    'Context █████░░░░░ 45% │ Usage ███░░░░░░░ 25% (⏰1h30) | Weekly █████████░ 85% (⏰2d2h) | ¥6.35',
+  );
+  assert.equal(lines(ctx({ usageData: data, config: compact(config) }))[0], '[Opus] █████░░░░░ 45% | my-project | Usage ███░░░░░░░ 25% (⏰1h30) | Weekly █████████░ 85% (⏰2d2h) | ¥6.35');
+  assert.match(lines(ctx({ usageData: data, config: { display: { compactResetTime: true, usageCompact: true } } }))[1], /│ 5h: 25% \(⏰1h30\) \| 7d: 85% \(⏰2d2h\) \| ¥6\.35$/);
+  assert.match(lines(ctx({ usageData: usage({ fiveHour: 100, balanceLabel: '¥6.35' }), config: { display: { compactResetTime: true, usageCompact: true } } }))[1], /│ ⚠ Limit \(⏰1h30\) \| ¥6\.35$/);
+  const limited = usage({ fiveHour: 100, balanceLabel: '¥6.35' });
+  assert.match(lines(ctx({ usageData: limited, config }))[1], /Usage ⚠ Limit reached \(⏰1h30\) \| ¥6\.35$/);
+});
+
+test('labelOverrides rename the bar labels and feed the align column', () => {
+  const data = usage({ sevenDay: 85 });
+  const config = { display: { labelOverrides: { context: 'Ctx', usage: 'Usg', weekly: 'Wkl' } } };
+  assert.equal(
+    lines(ctx({ usageData: data, config }))[1],
+    'Ctx █████░░░░░ 45% │ Usg ███░░░░░░░ 25% (resets in 1h 30m) | Wkl █████████░ 85% (resets in 2d 2h)',
+  );
+  const memoryConfig = {
+    display: { showMemoryUsage: true, labelOverrides: { context: 'Ctx', usage: 'Usg', weekly: 'Wkl', approxRam: 'RAM' } },
+    elementOrder: ['project', 'context', 'usage', 'memory'],
+  };
+  assert.deepEqual(lines(ctx({ usageData: data, memoryUsage: memory, config: memoryConfig })).slice(1), [
+    'Ctx █████░░░░░ 45% │ Usg ███░░░░░░░ 25% (resets in 1h 30m) | Wkl █████████░ 85% (resets in 2d 2h)',
+    'RAM █████░░░░░ 8.0 GB / 16 GB (50%)',
+  ]);
+});
+
+test('showBalanceLabel:false drops the snapshot label in every slot', () => {
+  const config = { display: { showBalanceLabel: false } };
+  const data = usage({ balanceLabel: '¥6.35' });
+  assert.equal(lines(ctx({ usageData: data }))[1], 'Context █████░░░░░ 45% │ Usage ███░░░░░░░ 25% (resets in 1h 30m) | ¥6.35');
+  assert.equal(lines(ctx({ usageData: data, config }))[1], 'Context █████░░░░░ 45% │ Usage ███░░░░░░░ 25% (resets in 1h 30m)');
+  const threshold = { display: { showBalanceLabel: false, usageThreshold: 50 } };
+  assert.equal(lines(ctx({ usageData: data, config: threshold }))[1], 'Context █████░░░░░ 45%');
+  const limited = usage({ fiveHour: 100, balanceLabel: '¥6.35' });
+  assert.match(lines(ctx({ usageData: limited, config }))[1], /Usage ⚠ Limit reached \(resets in 1h 30m\)$/);
+});
+
 test('below usageThreshold only a balance remains', () => {
   const config = { display: { usageThreshold: 50 } };
   assert.equal(lines(ctx({ usageData: usage(), config }))[1], 'Context █████░░░░░ 45%');

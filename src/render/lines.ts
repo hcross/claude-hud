@@ -84,7 +84,7 @@ export function memoryLine(f: Frame, align: LabelAlign = {}): string | null {
   const memory = f.memoryUsage;
   if (f.config?.lineLayout !== 'expanded' || f.config?.display?.showMemoryUsage !== true || !memory) return null;
   const colors = f.config?.colors;
-  const prefix = barLabel('label.approxRam', colors, { ...align, includeMemoryInWidth: true });
+  const prefix = barLabel('label.approxRam', colors, { ...align, includeMemoryInWidth: true }, f.config?.display);
   const percent = `${getQuotaColor(memory.usedPercent, colors)}${memory.usedPercent}%${RESET}`;
   const bar = quotaBar(memory.usedPercent, f.barWidth, colors);
   return `${prefix} ${bar} ${formatBytes(memory.usedBytes)} / ${formatBytes(memory.totalBytes)} (${percent})`;
