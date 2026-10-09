@@ -1,8 +1,12 @@
 import { interpolate, t } from '../i18n/index.js';
 export function wallClock(display) {
-    return { hourCycle: display?.hourCycle ?? 'auto', showSeconds: display?.showClockSeconds ?? false };
+    return {
+        hourCycle: display?.hourCycle ?? 'auto',
+        showSeconds: display?.showClockSeconds ?? false,
+        compact: display?.compactResetTime ?? false,
+    };
 }
-function formatDuration(ms) {
+function formatDuration(ms, compact = false) {
     const totalMins = Math.ceil(ms / 60000);
     if (totalMins < 60)
         return `${totalMins}m`;
@@ -10,9 +14,11 @@ function formatDuration(ms) {
     const mins = totalMins % 60;
     if (hours >= 24) {
         const days = Math.floor(hours / 24);
-        return hours % 24 > 0 ? `${days}d ${hours % 24}h` : `${days}d`;
+        return hours % 24 > 0 ? `${days}d${compact ? '' : ' '}${hours % 24}h` : `${days}d`;
     }
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    if (!compact)
+        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    return mins > 0 ? `${hours}h${mins}` : `${hours}h`;
 }
 /** Wall-clock time such as `at 14:30`, with the date when it isn't today. */
 export function formatAbsoluteTime(at, now, opts, pattern = 'format.absoluteTime') {
@@ -34,9 +40,9 @@ export function formatResetTime(resetAt, mode, opts, now) {
     if (remainingMs <= 0)
         return '';
     if (mode === 'relative')
-        return formatDuration(remainingMs);
+        return formatDuration(remainingMs, opts.compact);
     const absolute = formatAbsoluteTime(resetAt, new Date(now), opts);
-    return mode === 'absolute' ? absolute : `${formatDuration(remainingMs)}, ${absolute}`;
+    return mode === 'absolute' ? absolute : `${formatDuration(remainingMs, opts.compact)}, ${absolute}`;
 }
 function formatElapsed(resetAt, windowMs, now) {
     if (!resetAt)

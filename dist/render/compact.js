@@ -2,7 +2,7 @@ import { DEFAULT_PROJECT_LINE_ORDER } from '../config.js';
 import { t } from '../i18n/index.js';
 import { activityLine } from './activity.js';
 import { separatorLine, visibleWidth } from './ansi.js';
-import { contextBarAndValue, tokenBreakdown } from './context.js';
+import { contextPart, tokenBreakdown } from './context.js';
 import { cacheHitRateLine, promptCacheLine, sessionTimeLine } from './lines.js';
 import { orderParts } from './order.js';
 import { advisorPart, authPart, compactionsPart, configCountParts, costPart, customLinePart, durationPart, extraPart, modelBadge, projectParts, sessionNamePart, sessionTokensSummary, speedPart, versionPart, } from './parts.js';
@@ -11,8 +11,7 @@ const ACTIVITY = ['tools', 'skills', 'mcp', 'agents', 'todos'];
 // The context bar rides with the model badge, so the cluster moves as the 'model' segment.
 function modelCluster(f) {
     const display = f.config?.display;
-    const { bar, value } = contextBarAndValue(f);
-    return [display?.showModel !== false ? modelBadge(f) : null, bar, value].filter(Boolean).join(' ');
+    return [display?.showModel !== false ? modelBadge(f) : null, contextPart(f)].filter(Boolean).join(' ');
 }
 function sessionLine(f) {
     const parts = [];

@@ -2,6 +2,7 @@ import type { Language } from './i18n/types.js';
 declare const LINE_LAYOUTS: readonly ['compact', 'expanded'];
 declare const PATH_LEVELS: readonly [1, 2, 3, 'full'];
 declare const CONTEXT_VALUE_MODES: readonly ['percent', 'tokens', 'remaining', 'both'];
+declare const CONTEXT_POSITIONS: readonly ['ownLine', 'projectLine'];
 declare const USAGE_VALUE_MODES: readonly ['percent', 'remaining'];
 declare const GIT_BRANCH_OVERFLOW_MODES: readonly ['truncate', 'wrap'];
 declare const MODEL_FORMATS: readonly ['full', 'compact', 'short'];
@@ -11,12 +12,15 @@ declare const TIME_FORMATS: readonly ['relative', 'absolute', 'both', 'elapsed',
 declare const HOUR_CYCLES: readonly ['auto', 'h11', 'h12', 'h23', 'h24'];
 declare const CUSTOM_LINE_POSITIONS: readonly ['first', 'last'];
 declare const ADDED_DIRS_LAYOUTS: readonly ['inline', 'line'];
+declare const EXTERNAL_BALANCE_LABEL_MODES: readonly ['always', 'ollama-cloud'];
 declare const COLOR_NAMES: readonly ['dim', 'red', 'green', 'yellow', 'magenta', 'cyan', 'brightBlue', 'brightMagenta'];
 declare const ELEMENTS: readonly ['project', 'addedDirs', 'context', 'usage', 'promptCache', 'cacheHitRate', 'memory', 'environment', 'tools', 'skills', 'mcp', 'agents', 'todos', 'sessionTime'];
 declare const FIRST_LINE_SEGMENTS: readonly ['model', 'project', 'advisor', 'sessionName', 'version', 'extra', 'duration', 'cost', 'speed', 'auth'];
 export type LineLayoutType = typeof LINE_LAYOUTS[number];
 export type PathLevels = typeof PATH_LEVELS[number];
 export type ContextValueMode = typeof CONTEXT_VALUE_MODES[number];
+export type ContextPosition = typeof CONTEXT_POSITIONS[number];
+export type ExternalBalanceLabelMode = typeof EXTERNAL_BALANCE_LABEL_MODES[number];
 export type UsageValueMode = typeof USAGE_VALUE_MODES[number];
 export type GitBranchOverflowMode = typeof GIT_BRANCH_OVERFLOW_MODES[number];
 export type ModelFormatMode = typeof MODEL_FORMATS[number];
@@ -28,6 +32,8 @@ export type AddedDirsLayout = typeof ADDED_DIRS_LAYOUTS[number];
 export type HudColorName = typeof COLOR_NAMES[number];
 export type HudElement = typeof ELEMENTS[number];
 export type FirstLineSegment = typeof FIRST_LINE_SEGMENTS[number];
+export type ProgressLabelKey = 'context' | 'usage' | 'weekly' | 'approxRam';
+export declare const PROGRESS_LABEL_KEYS: readonly ['context', 'usage', 'weekly', 'approxRam'];
 /** A named preset, a 256-color index (0-255), or a #rrggbb hex string. */
 export type HudColorValue = HudColorName | number | string;
 export interface HudColorOverrides {
@@ -79,6 +85,7 @@ export interface HudConfig {
         addedDirsLayout: AddedDirsLayout;
         showContextBar: boolean;
         contextValue: ContextValueMode;
+        contextPosition: ContextPosition;
         showConfigCounts: boolean;
         showCost: boolean;
         showRoutedCost: boolean;
@@ -87,6 +94,7 @@ export interface HudConfig {
         showDuration: boolean;
         showSpeed: boolean;
         showTokenBreakdown: boolean;
+        showContextTokens: boolean;
         showUsage: boolean;
         usageValue: UsageValueMode;
         usageBarEnabled: boolean;
@@ -94,6 +102,9 @@ export interface HudConfig {
         usageCompact: boolean;
         showModelScopedUsage: boolean;
         usagePace: boolean;
+        compactResetTime: boolean;
+        labelOverrides: Partial<Record<ProgressLabelKey, string>>;
+        showBalanceLabel: boolean;
         showTools: boolean;
         showSkills: boolean;
         showMcp: boolean;
@@ -127,6 +138,7 @@ export interface HudConfig {
         externalUsagePath: string;
         externalUsageWritePath: string;
         externalUsageFreshnessMs: number;
+        externalBalanceLabelMode: ExternalBalanceLabelMode;
         modelFormat: ModelFormatMode;
         modelOverride: string;
         modelSource: typeof MODEL_SOURCES[number];

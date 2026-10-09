@@ -70,7 +70,9 @@ export async function main() {
         if (display.externalUsageWritePath && stdinUsage) {
             writeExternalUsageSnapshot(config, stdinUsage, now);
         }
-        const usageData = display.showUsage ? resolveUsage(config, stdinUsage, now) : null;
+        const usageData = display.showUsage
+            ? resolveUsage(config, stdinUsage, now, stdin.model?.display_name)
+            : null;
         render({
             stdin,
             transcript,

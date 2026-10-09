@@ -13,6 +13,8 @@ const LANGUAGES = ['en', 'zh', 'zh-Hans', 'zh-Hant', 'zh-TW'];
 const LINE_LAYOUTS = ['compact', 'expanded'];
 const PATH_LEVELS = [1, 2, 3, 'full'];
 const CONTEXT_VALUE_MODES = ['percent', 'tokens', 'remaining', 'both'];
+// ownLine: the Context row; projectLine: the bar rides inline on the first line.
+const CONTEXT_POSITIONS = ['ownLine', 'projectLine'];
 const USAGE_VALUE_MODES = ['percent', 'remaining'];
 const GIT_BRANCH_OVERFLOW_MODES = ['truncate', 'wrap'];
 // full: display name as-is; compact: drop the context-window suffix; short: also drop "Claude ".
@@ -23,6 +25,8 @@ const TIME_FORMATS = ['relative', 'absolute', 'both', 'elapsed', 'elapsedAndAbso
 const HOUR_CYCLES = ['auto', 'h11', 'h12', 'h23', 'h24'];
 const CUSTOM_LINE_POSITIONS = ['first', 'last'];
 const ADDED_DIRS_LAYOUTS = ['inline', 'line'];
+// When the snapshot's balance_label may ride the usage line.
+const EXTERNAL_BALANCE_LABEL_MODES = ['always', 'ollama-cloud'];
 const COLOR_NAMES = ['dim', 'red', 'green', 'yellow', 'magenta', 'cyan', 'brightBlue', 'brightMagenta'];
 const ELEMENTS = [
     'project',
@@ -53,6 +57,7 @@ const FIRST_LINE_SEGMENTS = [
     'speed',
     'auth',
 ];
+export const PROGRESS_LABEL_KEYS = ['context', 'usage', 'weekly', 'approxRam'];
 export const DEFAULT_ELEMENT_ORDER = [...ELEMENTS];
 export const DEFAULT_MERGE_GROUPS = [['context', 'usage']];
 // Empty keeps each renderer's native order until the user moves a segment.
@@ -88,6 +93,7 @@ export const DEFAULT_CONFIG = {
         addedDirsLayout: 'inline',
         showContextBar: true,
         contextValue: 'percent',
+        contextPosition: 'ownLine',
         showConfigCounts: false,
         showCost: false,
         showRoutedCost: false,
@@ -96,6 +102,7 @@ export const DEFAULT_CONFIG = {
         showDuration: false,
         showSpeed: false,
         showTokenBreakdown: true,
+        showContextTokens: false,
         showUsage: true,
         usageValue: 'percent',
         usageBarEnabled: true,
@@ -103,6 +110,9 @@ export const DEFAULT_CONFIG = {
         usageCompact: false,
         showModelScopedUsage: true,
         usagePace: false,
+        compactResetTime: false,
+        labelOverrides: {},
+        showBalanceLabel: true,
         showTools: false,
         showSkills: false,
         showMcp: false,
@@ -136,6 +146,7 @@ export const DEFAULT_CONFIG = {
         externalUsagePath: '',
         externalUsageWritePath: '',
         externalUsageFreshnessMs: 300000,
+        externalBalanceLabelMode: 'always',
         modelFormat: 'full',
         modelOverride: '',
         modelSource: 'stdin',
@@ -186,6 +197,22 @@ const names = (known, nonEmpty) => (value, fallback) => {
         return fallback;
     const kept = [...new Set(value.filter(item => known.includes(item)))];
     return kept.length > 0 || !nonEmpty ? kept : fallback;
+};
+// Bar-label overrides: keep only known keys, sanitized and capped so a long
+// string never breaks the align column. Unknown keys are dropped, not fatal.
+const labelOverrides = (value, fallback) => {
+    if (!isPlainObject(value))
+        return fallback;
+    const out = {};
+    for (const key of PROGRESS_LABEL_KEYS) {
+        const raw = value[key];
+        if (typeof raw === 'string') {
+            const clean = sanitizeDisplayText(raw).trim().slice(0, 12);
+            if (clean)
+                out[key] = clean;
+        }
+    }
+    return out;
 };
 // Groups need two or more known elements, and an element joins at most one group.
 const mergeGroups = (value, fallback) => {
@@ -238,6 +265,8 @@ const RULES = {
     'gitStatus.pushCriticalThreshold': floorAtLeastZero,
     'display.addedDirsLayout': oneOf(ADDED_DIRS_LAYOUTS),
     'display.contextValue': oneOf(CONTEXT_VALUE_MODES),
+    'display.contextPosition': oneOf(CONTEXT_POSITIONS),
+    'display.labelOverrides': labelOverrides,
     'display.usageValue': oneOf(USAGE_VALUE_MODES),
     'display.toolNameMaxLength': count,
     'display.toolsMaxVisible': count,
@@ -254,6 +283,7 @@ const RULES = {
     'display.externalUsagePath': usagePath,
     'display.externalUsageWritePath': usagePath,
     'display.externalUsageFreshnessMs': floorAtLeastZero,
+    'display.externalBalanceLabelMode': oneOf(EXTERNAL_BALANCE_LABEL_MODES),
     'display.modelFormat': oneOf(MODEL_FORMATS),
     'display.modelOverride': text(80),
     'display.modelSource': oneOf(MODEL_SOURCES),

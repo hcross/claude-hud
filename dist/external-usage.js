@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createDebug } from './debug.js';
+import { isOllamaCloudModel } from './stdin.js';
 import { sanitizeDisplayText } from './utils/sanitize.js';
 const debug = createDebug('external-usage');
 export const EXTERNAL_USAGE_WRITE_THROTTLE_MS = 30_000;
@@ -142,7 +143,9 @@ export function getUsageFromExternalSnapshot(config, now = Date.now()) {
 }
 // Stdin wins. The snapshot fills in what it lacks (the 7-day window for clients that only
 // send five_hour, model-scoped windows, a balance label), or stands in when stdin has none.
-export function resolveUsage(config, stdinUsage, now = Date.now()) {
+// With externalBalanceLabelMode 'ollama-cloud', the snapshot's balance_label merges only
+// when the displayed model is Ollama Cloud-served (`:cloud`); the windows merge regardless.
+export function resolveUsage(config, stdinUsage, now = Date.now(), modelDisplayName) {
     if (!config.display.externalUsagePath) {
         return stdinUsage;
     }
@@ -150,9 +153,11 @@ export function resolveUsage(config, stdinUsage, now = Date.now()) {
     if (!stdinUsage || !external) {
         return stdinUsage ?? external;
     }
+    const mergeBalance = (config.display.externalBalanceLabelMode ?? 'always') === 'always'
+        || isOllamaCloudModel(modelDisplayName);
     return {
         ...stdinUsage,
-        ...(external.balanceLabel != null && { balanceLabel: external.balanceLabel }),
+        ...(mergeBalance && external.balanceLabel != null && { balanceLabel: external.balanceLabel }),
         ...(stdinUsage.sevenDay == null && external.sevenDay != null && {
             sevenDay: external.sevenDay,
             sevenDayResetAt: external.sevenDayResetAt ?? null,

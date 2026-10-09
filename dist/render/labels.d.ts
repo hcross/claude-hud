@@ -1,4 +1,4 @@
-import type { HudColorOverrides } from '../config.js';
+import type { HudConfig, HudColorOverrides } from '../config.js';
 import type { MessageKey } from '../i18n/types.js';
 export interface LabelAlign {
     align?: boolean;
@@ -6,5 +6,5 @@ export interface LabelAlign {
     includeMemoryInWidth?: boolean;
 }
 /** A bar label, padded to the widest bar label in view when bars are stacked. */
-export declare function barLabel(key: MessageKey, colors?: Partial<HudColorOverrides>, options?: LabelAlign): string;
+export declare function barLabel(key: MessageKey, colors?: Partial<HudColorOverrides>, options?: LabelAlign, display?: HudConfig['display']): string;
 //# sourceMappingURL=labels.d.ts.map

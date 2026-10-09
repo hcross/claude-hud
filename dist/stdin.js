@@ -78,6 +78,10 @@ export function isContextUnreported(stdin) {
 export function getModelName(stdin) {
     return stdin.model?.display_name?.trim() || stdin.model?.id?.trim() || 'Unknown';
 }
+/** `glm-5.3-flash:cloud` and cousins: Ollama Cloud-served models, trim/lowercase-insensitive. */
+export function isOllamaCloudModel(displayName) {
+    return typeof displayName === 'string' && displayName.trim().toLowerCase().endsWith(':cloud');
+}
 function isClaudeModel(model) {
     const lower = model.toLowerCase();
     return lower.startsWith('claude-') || lower.startsWith('anthropic.');

@@ -3,6 +3,8 @@ import type { MessageKey } from '../i18n/types.js';
 interface WallClockOptions {
     hourCycle: HourCycleMode;
     showSeconds: boolean;
+    /** Glue durations without spaces (`3h30`) for the compact reset times. */
+    compact?: boolean;
 }
 export declare function wallClock(display: Partial<HudConfig['display']> | undefined): WallClockOptions;
 /** Wall-clock time such as `at 14:30`, with the date when it isn't today. */

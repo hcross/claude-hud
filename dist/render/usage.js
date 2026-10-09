@@ -8,20 +8,23 @@ function formatWindow(f, layout, w, align) {
     const display = f.config?.display;
     const colors = f.config?.colors;
     const timeFormat = display?.timeFormat ?? 'relative';
+    const compactReset = display?.compactResetTime ?? false;
     const percent = formatQuotaPercent(w.percent, colors, display?.usageValue ?? 'percent', w.pace);
     const reset = formatWindowTime(w.resetAt, w.windowMs, timeFormat, wallClock(display), f.now);
     if (display?.usageCompact) {
         return reset
-            ? `${label(`${w.label}:`, colors)} ${percent} ${label(`(${reset})`, colors)}`
+            ? `${label(`${w.label}:`, colors)} ${percent} ${label(`(${compactReset ? `⏰${reset}` : reset})`, colors)}`
             : `${label(`${w.label}:`, colors)} ${percent}`;
     }
     const elapsedMode = timeFormat === 'elapsed' || timeFormat === 'elapsedAndAbsolute';
     const wording = (display?.showResetLabel ?? true) && !elapsedMode;
-    const resetText = reset && wording ? `${t(timeFormat === 'absolute' ? 'format.resets' : 'format.resetsIn')} ${reset}` : reset;
-    const styledLabel = w.labelKey ? barLabel(w.labelKey, colors, align) : label(w.label, colors);
+    const resetText = reset && wording
+        ? `${compactReset ? '⏰' : t(timeFormat === 'absolute' ? 'format.resets' : 'format.resetsIn')}${compactReset ? '' : ' '}${reset}`
+        : reset;
+    const styledLabel = w.labelKey ? barLabel(w.labelKey, colors, align, display) : label(w.label, colors);
     if (display?.usageBarEnabled ?? true) {
         const barReset = layout === 'compact' && timeFormat === 'relative' && reset
-            ? `${reset} / ${w.durationLabel ?? w.label}`
+            ? (compactReset ? `⏰${reset}` : `${reset} / ${w.durationLabel ?? w.label}`)
             : resetText;
         const body = `${quotaBar(w.percent ?? 0, f.barWidth, colors, w.pace)} ${percent}${barReset ? ` (${barReset})` : ''}`;
         return w.forceLabel ? `${styledLabel} ${body}` : body;
@@ -35,10 +38,16 @@ function limitNotice(f) {
     const resetAt = usage.fiveHour === 100 ? usage.fiveHourResetAt : usage.sevenDayResetAt;
     const reset = formatResetTime(resetAt, format, wallClock(display), f.now);
     if (display?.usageCompact) {
-        return critical(`⚠ Limit${reset ? ` (${reset})` : ''}`, f.config?.colors);
+        return critical(`⚠ Limit${reset ? ` (${display.compactResetTime ? `⏰${reset}` : reset})` : ''}`, f.config?.colors);
     }
     const resetsKey = format === 'absolute' ? 'format.resets' : 'format.resetsIn';
-    const suffix = reset ? ((display?.showResetLabel ?? true) ? ` (${t(resetsKey)} ${reset})` : ` (${reset})`) : '';
+    const suffix = reset
+        ? (display?.compactResetTime ?? false)
+            ? ` (⏰${reset})`
+            : (display?.showResetLabel ?? true)
+                ? ` (${t(resetsKey)} ${reset})`
+                : ` (${reset})`
+        : '';
     return critical(`⚠ ${t('status.limitReached')}${suffix}`, f.config?.colors);
 }
 /**
@@ -53,9 +62,10 @@ export function usageParts(f, layout, align = {}) {
         return null;
     const colors = f.config?.colors;
     const compact = layout === 'compact';
-    const usageLabel = barLabel('label.usage', colors, align);
+    const usageLabel = barLabel('label.usage', colors, align, display);
     const withLabel = (part) => `${usageLabel} ${part}`;
-    const balance = usage.balanceLabel ?? null;
+    // showBalanceLabel:false hides the external snapshot's own label entirely.
+    const balance = display?.showBalanceLabel === false ? null : usage.balanceLabel ?? null;
     const withBalance = (parts) => (balance ? [...parts, balance] : parts);
     const scopedWindows = display?.showModelScopedUsage === false ? [] : usage.scopedWindows ?? [];
     const hasWindowData = usage.fiveHour !== null || usage.sevenDay !== null || scopedWindows.length > 0;

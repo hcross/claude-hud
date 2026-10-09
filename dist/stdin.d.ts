@@ -13,6 +13,8 @@ export interface ContextUsage {
 export declare function getContextUsage(stdin: StdinData, autoCompactWindow?: number | null, transcriptTokens?: number): ContextUsage;
 export declare function isContextUnreported(stdin: StdinData): boolean;
 export declare function getModelName(stdin: StdinData): string;
+/** `glm-5.3-flash:cloud` and cousins: Ollama Cloud-served models, trim/lowercase-insensitive. */
+export declare function isOllamaCloudModel(displayName: string | undefined | null): boolean;
 export declare function resolveModelName(stdin: StdinData, transcript: TranscriptData | undefined, modelSource?: 'auto' | 'stdin' | 'transcript'): string;
 export declare function isBedrockModelId(modelId?: string): boolean;
 export declare function isVertexModelId(modelId?: string): boolean;

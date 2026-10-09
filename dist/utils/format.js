@@ -6,6 +6,15 @@ export function formatTokens(n) {
         return `${(n / 1000).toFixed(0)}k`;
     return n.toString();
 }
+/** `91.2k`, `1.23m`, or `800` - one decimal under a million, two over, zeros trimmed. */
+export function formatTokensCompact(n) {
+    const trim = (s) => s.replace(/\.?0+$/, '');
+    if (n >= 1000000)
+        return `${trim((n / 1000000).toFixed(2))}m`;
+    if (n >= 1000)
+        return `${trim((n / 1000).toFixed(1))}k`;
+    return n.toString();
+}
 // percent → "45%", tokens → "45k/200k", remaining → "55%", both → "45% (45k/200k)".
 export function formatContextValue(context, mode) {
     const { percent, tokens, size } = context;
